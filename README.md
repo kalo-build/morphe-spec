@@ -38,9 +38,55 @@ The name represents the ancient Greek "form" or "shape", implying an ideal form 
 Version | Status | Description | Repo
 --------|---------|------------|------
 KA:MO1 | 🚧 In Progress | First stable release of the Morphe core specification | [kaloseia/morphe-spec](https://github.com/kaloseia/morphe-spec)
-KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [kaloseia/morphe-ts-spec](https://github.com/kaloseia/morphe-ts-spec)
-KA:MO1:YAML1->TS1 | 🚧 In Progress | TypeScript transpilation standard from YAML for specification format KA:MO1 | [kaloseia/morphe-ts-spec](https://github.com/kaloseia/morphe-ts-spec)
-KA:MO1:YAML1->GO1 | 🚧 In Progress | Go transpilation standard from YAML for specification format KA:MO1 | [kaloseia/morphe-go-spec](https://github.com/kaloseia/morphe-go-spec)
+KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [kaloseia/morphe-yaml-spec](https://github.com/kaloseia/morphe-yaml-spec)
+KA:MO1:YAML1->TS1 | 🚧 In Progress | TypeScript transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-ts-spec](https://github.com/kaloseia/morphe-yaml-ts-spec)
+KA:MO1:YAML1->GO1 | 🚧 In Progress | Go transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-go-spec](https://github.com/kaloseia/morphe-yaml-go-spec)
+KA:MO1:YAML1->PSQL1 | 🚧 In Progress | PostgreSQL transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-psql-spec](https://github.com/kaloseia/morphe-yaml-psql-spec)
+
+This document specifies the YAML format for defining Morphe data models. The `KA:MO1:YAML1` standard ensures consistent and predictable YAML structure across projects.
+
+## Specification Hierarchy
+
+The Morphe specification system uses a hierarchical naming scheme to clearly identify different types of specifications:
+
+### Base Specification (`KA:MO1`)
+- `KA:` - Organization/context prefix
+- `MO1:` - Base specification identifier (Morphe version 1)
+- *Example:* `KA:MO1` - The core Morphe data modeling specification
+
+### Format Specification (`KA:MO1:YAML1`)
+- Extends base specification with format identifier
+- `YAML1:` - Format representation identifier (YAML version 1)
+- *Example:* `KA:MO1:YAML1` - The YAML format specification for Morphe
+
+### Transpilation Specification (`KA:MO1:YAML1->GO1`)
+- Extends format specification with target format
+- `->GO1:` - Target format identifier (Go version 1)
+- *Example:* `KA:MO1:YAML1->GO1` - The Go transpilation specification for Morphe YAML
+
+### Motivation
+
+This hierarchical naming scheme provides several benefits:
+1. Clear separation between base concepts, format representations, and transpilation targets
+2. Support for multiple format representations of the same base specification
+3. Ability to transpile between different formats (e.g., `KA:MO1:YAML1->GO1` and `KA:MO1:GO1->YAML1`)
+4. Version tracking at each level of the specification
+5. Extensibility for future formats and transpilation targets
+
+### Example Specification Types
+
+1. Base Specifications:
+   - `KA:MO1` - Core Morphe data modeling specification
+
+2. Format Specifications:
+   - `KA:MO1:YAML1` - YAML format representation
+   - `KA:MO1:GO1` - Go format representation
+   - `KA:MO1:TS1` - TypeScript format representation
+
+3. Transpilation Specifications:
+   - `KA:MO1:YAML1->GO1` - YAML to Go transpilation
+   - `KA:MO1:YAML1->TS1` - YAML to TypeScript transpilation
+   - `KA:MO1:YAML1->PSQL1` - YAML to PostgreSQL transpilation
 
 ## Key Features
 
