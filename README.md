@@ -29,7 +29,7 @@
 
 ## Overview
 
-Morphe (KAMO1) is a simple, human-readable base data modeling specification designed to facilitate consistent transpilation of models into multiple programming languages.
+Morphe (KA:MO1) is a simple, human-readable base data modeling specification designed to facilitate consistent transpilation of models into multiple programming languages.
 
 The name represents the ancient Greek "form" or "shape", implying an ideal form or prototype from which other forms are derived. This symbolizes how declaratively modelled data in YAML is generatively transformed into code.
 
@@ -305,7 +305,7 @@ We welcome contributions to the Morphe specification and its language-specific i
 
 1. **Issues First**
    * Start by creating an issue to discuss your proposed changes
-   * For bugs, include the specification version (e.g., KAMO1, KAMO1-TS1)
+   * For bugs, include the specification version (e.g., KA:MO1, KA:MO1:YAML1->TS1)
    * For features, explain the use case and expected benefits
 
 2. **Pull Requests**
