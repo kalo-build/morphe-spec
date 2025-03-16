@@ -37,9 +37,10 @@ The name represents the ancient Greek "form" or "shape", implying an ideal form 
 
 Version | Status | Description | Repo
 --------|---------|------------|------
-KAMO1 | 🚧 In Progress | First stable release of the Morphe core specification | [kaloseia/morphe-spec](https://github.com/kaloseia/morphe-spec)
-KAMO1-TS1 | 🚧 In Progress | TypeScript transpilation standard for KAMO1 | [kaloseia/morphe-ts-spec](https://github.com/kaloseia/morphe-ts-spec)
-KAMO1-GO1 | 🚧 In Progress | Go transpilation standard for KAMO1 | [kaloseia/morphe-go-spec](https://github.com/kaloseia/morphe-go-spec)
+KA:MO1 | 🚧 In Progress | First stable release of the Morphe core specification | [kaloseia/morphe-spec](https://github.com/kaloseia/morphe-spec)
+KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [kaloseia/morphe-ts-spec](https://github.com/kaloseia/morphe-ts-spec)
+KA:MO1:YAML1->TS1 | 🚧 In Progress | TypeScript transpilation standard from YAML for specification format KA:MO1 | [kaloseia/morphe-ts-spec](https://github.com/kaloseia/morphe-ts-spec)
+KA:MO1:YAML1->GO1 | 🚧 In Progress | Go transpilation standard from YAML for specification format KA:MO1 | [kaloseia/morphe-go-spec](https://github.com/kaloseia/morphe-go-spec)
 
 ## Key Features
 
