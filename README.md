@@ -1,4 +1,4 @@
-# Morphe Specification (KAMO1) - Unified Application Data Modeling
+# Morphe Specification (KA:MO1) - Unified Application Data Modeling
 
 ## Table of Contents
 
