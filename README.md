@@ -113,7 +113,7 @@ Enums are predefined sets of constant values that can be used as types for field
 
 Each enum consists of a name, a primitive type (`String`, `Integer`, `Float`), and a set of entries. Entries are defined as symbol names with an associated primitive representation.
 
-*Example:* `color.enum`
+*Example:* `color.enum` in `KA:MO1:YAML1`
 
 ```yaml
 name: Color
@@ -132,7 +132,7 @@ Each structure consists of a `name`, and a set of `fields`.
 
 **Note:** Unlike models, structures do not have relationships or identifiers, as they are not persisted.
 
-*Example:* `address.str`
+*Example:* `address.str` in `KA:MO1:YAML1`
 ```yaml
 name: Address
 fields:
@@ -152,7 +152,7 @@ Models are the primary persisted data structures. They are somewhat analogous to
 
 Each model consists of a `name`, a set of `fields`, a set of `identifiers`, and `related` models.
 
-*Example:* `address.mod`
+*Example:* `address.mod` in `KA:MO1:YAML1`
 ```yaml
 name: Address
 fields:
@@ -222,7 +222,7 @@ Entities are indirect data structures that route internally to model field subse
 
 Entities consist of a `name`, a set of `fields`, `identifiers`,and related `entities`. Identifiers and field types are inherited from models.
 
-*Example:* `user.ent`
+*Example:* `user.ent` in `KA:MO1:YAML1`
 ```yaml
 name: User
 fields:
