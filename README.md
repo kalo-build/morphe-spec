@@ -37,11 +37,11 @@ The name represents the ancient Greek "form" or "shape", implying an ideal form 
 
 Version | Status | Description | Repo
 --------|---------|------------|------
-KA:MO1 | 🚧 In Progress | First stable release of the Morphe core specification | [kaloseia/morphe-spec](https://github.com/kaloseia/morphe-spec)
-KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [kaloseia/morphe-yaml-spec](https://github.com/kaloseia/morphe-yaml-spec)
-KA:MO1:YAML1->TS1 | 🚧 In Progress | TypeScript transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-ts-spec](https://github.com/kaloseia/morphe-yaml-ts-spec)
-KA:MO1:YAML1->GO1 | 🚧 In Progress | Go transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-go-spec](https://github.com/kaloseia/morphe-yaml-go-spec)
-KA:MO1:YAML1->PSQL1 | 🚧 In Progress | PostgreSQL transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-psql-spec](https://github.com/kaloseia/morphe-yaml-psql-spec)
+KA:MO1 | 🚧 In Progress | First stable release of the Morphe core specification | [kalo/morphe-spec](https://github.com/kalo-build/morphe-spec)
+KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [kalo/morphe-yaml-spec](https://github.com/kalo-build/morphe-yaml-spec)
+KA:MO1:YAML1->TS1 | 🚧 In Progress | TypeScript transpilation standard from YAML for specification format KA:MO1:YAML1 | [kalo/morphe-yaml-ts-spec](https://github.com/kalo-build/morphe-yaml-ts-spec)
+KA:MO1:YAML1->GO1 | 🚧 In Progress | Go transpilation standard from YAML for specification format KA:MO1:YAML1 | [kalo/morphe-yaml-go-spec](https://github.com/kalo-build/morphe-yaml-go-spec)
+KA:MO1:YAML1->PSQL1 | 🚧 In Progress | PostgreSQL transpilation standard from YAML for specification format KA:MO1:YAML1 | [kalo/morphe-yaml-psql-spec](https://github.com/kalo-build/morphe-yaml-psql-spec)
 
 This document specifies the YAML format for defining Morphe data models. The `KA:MO1:YAML1` standard ensures consistent and predictable YAML structure across projects.
 
