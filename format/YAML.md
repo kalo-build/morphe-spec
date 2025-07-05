@@ -95,6 +95,91 @@ related:
     type: ForMany
 ```
 
+### Aliased Relationships
+
+```yaml
+name: Company
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Owner:
+    type: HasOne
+    aliased: Person
+  Employees:
+    type: HasMany
+    aliased: Person
+```
+
+## Polymorphism
+
+### Polymorphic Base Model
+
+```yaml
+name: ContentItem
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+  Type:
+    type: String
+identifiers:
+  primary: ID
+polymorphic:
+  discriminator: Type
+  identity: content_item
+```
+
+### Polymorphic Subclass Models
+
+```yaml
+name: Article
+extends: ContentItem
+fields:
+  Content:
+    type: String
+  WordCount:
+    type: Integer
+polymorphic:
+  identity: article
+```
+
+```yaml
+name: Video
+extends: ContentItem
+fields:
+  Duration:
+    type: Integer
+  Resolution:
+    type: String
+polymorphic:
+  identity: video
+```
+
+### Polymorphic Entities
+
+```yaml
+name: ContentSummary
+extends: ContentItem
+fields:
+  ID:
+    type: ContentItem.ID
+  Title:
+    type: ContentItem.Title
+  Type:
+    type: ContentItem.Type
+  Summary:
+    type: ContentItem.Content  # For articles
+    fallback: ContentItem.Duration  # For videos
+polymorphic:
+  identity: content_summary
+```
+
 ## Enumerations
 
 *Example (string):*
@@ -263,6 +348,22 @@ Relationship types:
 - `HasMany`: One-to-many relationship where the current model owns multiple related models
 - `ForOne`: One-to-one relationship where the current model belongs to one related model
 - `ForMany`: Many-to-many relationship between models
+
+### Aliased Relationships
+
+When multiple relationships reference the same target model, use the `aliased` attribute to specify the actual target while maintaining semantic relationship names:
+
+```yaml
+related:
+  Owner:
+    type: HasOne
+    aliased: Person
+  Employees:
+    type: HasMany
+    aliased: Person
+```
+
+This allows the same model (`Person`) to serve different roles within the relationship context.
 
 ## Contributing
 

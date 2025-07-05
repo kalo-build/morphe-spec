@@ -540,6 +540,264 @@ CREATE INDEX idx_persons_company_id ON persons(company_id);
 CREATE INDEX idx_contact_infos_email ON contact_infos(email);
 ```
 
+## Polymorphism
+
+The `KA:MO1:YAML1->PSQL1` standard supports polymorphic models using single table inheritance with discriminator columns. This approach provides optimal performance and simplicity for polymorphic queries.
+
+### Polymorphic Base Model
+
+Input (.mod file):
+
+```yaml
+name: ContentItem
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+  Type:
+    type: String
+identifiers:
+  primary: ID
+polymorphic:
+  discriminator: Type
+  identity: content_item
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE TABLE content_items (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    "type" TEXT NOT NULL,
+    -- Polymorphic subclass fields
+    content TEXT,        -- For Article subclass
+    word_count INTEGER,  -- For Article subclass
+    duration INTEGER,    -- For Video subclass
+    resolution TEXT,     -- For Video subclass
+    -- Check constraints to ensure data integrity
+    CONSTRAINT chk_content_items_article_fields 
+        CHECK (("type" = 'article' AND content IS NOT NULL) OR ("type" != 'article' AND content IS NULL)),
+    CONSTRAINT chk_content_items_video_fields
+        CHECK (("type" = 'video' AND duration IS NOT NULL) OR ("type" != 'video' AND duration IS NULL))
+);
+
+CREATE INDEX idx_content_items_type ON content_items("type");
+```
+
+### Polymorphic Subclass Models
+
+Input (.mod file):
+
+```yaml
+name: Article
+extends: ContentItem
+fields:
+  Content:
+    type: String
+  WordCount:
+    type: Integer
+polymorphic:
+  identity: article
+```
+
+Output (PostgreSQL):
+
+```sql
+-- Article is implemented as part of the content_items table
+-- The check constraints ensure data integrity for article-specific fields
+```
+
+### Polymorphic Queries
+
+The discriminator column enables efficient polymorphic queries:
+
+```sql
+-- Get all content items
+SELECT * FROM content_items;
+
+-- Get only articles
+SELECT * FROM content_items WHERE "type" = 'article';
+
+-- Get only videos
+SELECT * FROM content_items WHERE "type" = 'video';
+
+-- Polymorphic query with type-specific field access
+SELECT 
+    id,
+    title,
+    "type",
+    CASE 
+        WHEN "type" = 'article' THEN content
+        WHEN "type" = 'video' THEN CAST(duration AS TEXT)
+        ELSE NULL
+    END AS type_specific_content
+FROM content_items;
+```
+
+### Polymorphic Entities
+
+Polymorphic entities are implemented as views with conditional field access:
+
+Input (.ent file):
+
+```yaml
+name: ContentSummary
+extends: ContentItem
+fields:
+  ID:
+    type: ContentItem.ID
+  Title:
+    type: ContentItem.Title
+  Type:
+    type: ContentItem.Type
+  Summary:
+    type: ContentItem.Content
+    fallback: ContentItem.Duration
+polymorphic:
+  identity: content_summary
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE VIEW content_summaries AS
+SELECT 
+    id,
+    title,
+    "type",
+    CASE 
+        WHEN "type" = 'article' THEN content
+        WHEN "type" = 'video' THEN CAST(duration AS TEXT)
+        ELSE NULL
+    END AS summary
+FROM content_items;
+```
+
+### Benefits of Single Table Inheritance
+
+1. **Performance**: No JOINs required for polymorphic queries
+2. **Simplicity**: Single table structure is easier to understand and maintain
+3. **Flexibility**: Easy to add new subclasses by adding columns and constraints
+4. **Referential Integrity**: Foreign keys can reference the base table directly
+
+### Considerations
+
+- **Nullable Columns**: Subclass-specific fields must be nullable in the base table
+- **Check Constraints**: Required to maintain data integrity across subclasses
+- **Storage Overhead**: Unused columns consume space (though minimal in PostgreSQL)
+- **Schema Evolution**: Adding new subclasses requires schema changes
+
+## Aliased Relationships
+
+Aliased relationships allow multiple semantic relationships to reference the same target model. In PostgreSQL, these are implemented using foreign keys with clear naming conventions.
+
+### Aliased Model Relationships
+
+Input (.mod file):
+
+```yaml
+name: Company
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Owner:
+    type: HasOne
+    aliased: Person
+  Employees:
+    type: HasMany
+    aliased: Person
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE TABLE companies (
+    id SERIAL PRIMARY KEY,
+    "name" TEXT,
+    owner_person_id INTEGER,
+    CONSTRAINT fk_companies_owner_person_id FOREIGN KEY (owner_person_id)
+      REFERENCES persons(id)
+      ON DELETE SET NULL
+);
+
+CREATE TABLE persons (
+    id SERIAL PRIMARY KEY,
+    "name" TEXT,
+    -- For the HasMany relationship, the foreign key is on the person table
+    company_id INTEGER,
+    CONSTRAINT fk_persons_company_id FOREIGN KEY (company_id)
+      REFERENCES companies(id)
+      ON DELETE SET NULL
+);
+
+-- Indices for performance
+CREATE INDEX idx_companies_owner_person_id ON companies(owner_person_id);
+CREATE INDEX idx_persons_company_id ON persons(company_id);
+```
+
+### Aliased Entity Relationships
+
+Entities can reference specific aliased relationships:
+
+Input (.ent file):
+
+```yaml
+name: CompanyProfile
+fields:
+  ID:
+    type: Company.ID
+  Name:
+    type: Company.Name
+  OwnerName:
+    type: Company.Owner.Name
+  EmployeeCount:
+    type: Company.Employees.Count
+identifiers:
+  primary: ID
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE VIEW company_profiles AS
+SELECT 
+    c.id,
+    c.name,
+    owner.name AS owner_name,
+    (
+        SELECT COUNT(*)
+        FROM persons employees
+        WHERE employees.company_id = c.id
+    ) AS employee_count
+FROM 
+    companies c
+LEFT JOIN 
+    persons owner ON c.owner_person_id = owner.id;
+```
+
+### Naming Conventions for Aliased Relationships
+
+1. **Foreign Key Columns**: `{relationship_name}_{target_model}_id`
+   - Example: `owner_person_id` for Owner relationship to Person
+2. **Constraint Names**: `fk_{table}_{relationship_name}_{target_model}_id`
+   - Example: `fk_companies_owner_person_id`
+3. **Index Names**: `idx_{table}_{relationship_name}_{target_model}_id`
+   - Example: `idx_companies_owner_person_id`
+
+### Benefits of Aliased Relationships
+
+1. **Semantic Clarity**: Relationship names clearly indicate their purpose
+2. **Type Safety**: All relationships reference the same underlying model
+3. **Flexible Querying**: Can query specific relationship contexts
+4. **Maintainability**: Clear separation of different relationship meanings
+
 ## Migration Support
 
 The `KA:MO1:YAML1->PSQL1` standard includes support for generating schema migrations using tools like:

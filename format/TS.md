@@ -343,6 +343,284 @@ export type CompanyIDPrimary = {
    - Import paths are adjusted to maintain correct references
    - All relationships are optional by default in entities
 
+## Polymorphism
+
+**Note**: Polymorphism support for TypeScript transpilation is planned for future implementation. The following documentation represents the intended design and will be updated as implementation progresses.
+
+### Polymorphic Base Model
+
+Input (.mod file):
+
+```yaml
+name: ContentItem
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+  Type:
+    type: String
+identifiers:
+  primary: ID
+polymorphic:
+  discriminator: Type
+  identity: content_item
+```
+
+Output (.d.ts):
+
+```ts
+export enum ContentItemType {
+  ContentItem = "content_item",
+  Article = "article",
+  Video = "video"
+}
+
+export interface BaseContentItem {
+  id: number
+  title: string
+  type: ContentItemType
+}
+
+export interface ContentItem extends BaseContentItem {
+  type: ContentItemType
+}
+
+export type ContentItemUnion = 
+  | (BaseContentItem & { type: ContentItemType.ContentItem })
+  | Article 
+  | Video
+
+export type ContentItemIDPrimary = {
+  id: number
+}
+```
+
+### Polymorphic Subclass Models
+
+Input (.mod file):
+
+```yaml
+name: Article
+extends: ContentItem
+fields:
+  Content:
+    type: String
+  WordCount:
+    type: Integer
+polymorphic:
+  identity: article
+```
+
+Output (.d.ts):
+
+```ts
+import { BaseContentItem, ContentItemType } from "./content-item"
+
+export interface Article extends BaseContentItem {
+  type: ContentItemType.Article
+  content: string
+  wordCount: number
+}
+
+export type ArticleIDPrimary = {
+  id: number
+}
+
+// Type guards for polymorphic instances
+export function isArticle(item: ContentItemUnion): item is Article {
+  return item.type === ContentItemType.Article
+}
+
+// Factory function
+export function createArticle(
+  id: number, 
+  title: string, 
+  content: string, 
+  wordCount: number
+): Article {
+  return {
+    id,
+    title,
+    type: ContentItemType.Article,
+    content,
+    wordCount
+  }
+}
+```
+
+### Polymorphic Factory Functions
+
+```ts
+import { ContentItemUnion, ContentItemType } from "./content-item"
+import { Article, createArticle } from "./article"
+import { Video, createVideo } from "./video"
+
+export function createContentItem(
+  type: ContentItemType,
+  data: Record<string, any>
+): ContentItemUnion {
+  switch (type) {
+    case ContentItemType.Article:
+      return createArticle(
+        data.id,
+        data.title,
+        data.content,
+        data.wordCount
+      )
+    case ContentItemType.Video:
+      return createVideo(
+        data.id,
+        data.title,
+        data.duration,
+        data.resolution
+      )
+    default:
+      throw new Error(`Unknown content item type: ${type}`)
+  }
+}
+```
+
+## Aliased Relationships
+
+### Aliased Model Relationships
+
+Input (.mod file):
+
+```yaml
+name: Company
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Owner:
+    type: HasOne
+    aliased: Person
+  Employees:
+    type: HasMany
+    aliased: Person
+```
+
+Output (.d.ts):
+
+```ts
+import { Person } from "./person"
+
+export type Company = {
+  id: number
+  name: string
+  ownerID?: number
+  owner?: Person    // Aliased to Person
+  employeeIDs?: number[]
+  employees?: Person[]  // Aliased to Person
+}
+
+export type CompanyIDPrimary = {
+  id: number
+}
+
+// Type-safe utility functions for aliased relationships
+export interface CompanyWithOwner extends Company {
+  owner: Person
+  ownerID: number
+}
+
+export interface CompanyWithEmployees extends Company {
+  employees: Person[]
+  employeeIDs: number[]
+}
+
+export function hasOwner(company: Company): company is CompanyWithOwner {
+  return company.owner !== undefined && company.ownerID !== undefined
+}
+
+export function hasEmployees(company: Company): company is CompanyWithEmployees {
+  return company.employees !== undefined && company.employees.length > 0
+}
+```
+
+### Aliased Entity Relationships
+
+Input (.ent file):
+
+```yaml
+name: CompanyProfile
+fields:
+  ID:
+    type: Company.ID
+  Name:
+    type: Company.Name
+  OwnerName:
+    type: Company.Owner.Name
+  EmployeeCount:
+    type: Company.Employees.Count
+identifiers:
+  primary: ID
+```
+
+Output (.d.ts):
+
+```ts
+import { Company } from "../models/company"
+
+export type CompanyProfile = {
+  id: number
+  name: string
+  ownerName?: string
+  employeeCount: number
+}
+
+export type CompanyProfileIDPrimary = {
+  id: number
+}
+
+// Factory function with aliased relationship field resolution
+export function createCompanyProfile(company: Company): CompanyProfile {
+  return {
+    id: company.id,
+    name: company.name,
+    ownerName: company.owner?.name,
+    employeeCount: company.employees?.length ?? 0
+  }
+}
+
+// Type guards for profile validation
+export function isValidCompanyProfile(profile: Partial<CompanyProfile>): profile is CompanyProfile {
+  return (
+    typeof profile.id === 'number' &&
+    typeof profile.name === 'string' &&
+    typeof profile.employeeCount === 'number'
+  )
+}
+```
+
+### Discriminated Union Types
+
+For complex polymorphic relationships with aliased models:
+
+```ts
+export type CompanyRelationshipType = 
+  | { type: 'owner', person: Person }
+  | { type: 'employee', person: Person }
+
+export function createCompanyRelationship(
+  type: 'owner' | 'employee',
+  person: Person
+): CompanyRelationshipType {
+  return { type, person }
+}
+
+export function isOwnerRelationship(
+  rel: CompanyRelationshipType
+): rel is { type: 'owner', person: Person } {
+  return rel.type === 'owner'
+}
+```
+
 ## Type Mappings
 
 Morphe Type | TypeScript Type

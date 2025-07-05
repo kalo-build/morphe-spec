@@ -263,6 +263,252 @@ type PersonIDPrimary struct {
 }
 ```
 
+## Polymorphism
+
+**Note**: Polymorphism support for Go transpilation is planned for future implementation. The following documentation represents the intended design and will be updated as implementation progresses.
+
+### Polymorphic Base Model
+
+Input (.mod file):
+
+```yaml
+name: ContentItem
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+  Type:
+    type: String
+identifiers:
+  primary: ID
+polymorphic:
+  discriminator: Type
+  identity: content_item
+```
+
+Output (.go):
+
+```go
+package models
+
+import "errors"
+
+type ContentItemType string
+
+const (
+    ContentItemTypeContent ContentItemType = "content_item"
+    ContentItemTypeArticle ContentItemType = "article"  
+    ContentItemTypeVideo   ContentItemType = "video"
+)
+
+type ContentItem interface {
+    GetID() uint
+    GetTitle() string
+    GetType() ContentItemType
+}
+
+type BaseContentItem struct {
+    ID    uint
+    Title string
+    Type  ContentItemType
+}
+
+func (b BaseContentItem) GetID() uint { return b.ID }
+func (b BaseContentItem) GetTitle() string { return b.Title }
+func (b BaseContentItem) GetType() ContentItemType { return b.Type }
+```
+
+### Polymorphic Subclass Models
+
+Input (.mod file):
+
+```yaml
+name: Article
+extends: ContentItem
+fields:
+  Content:
+    type: String
+  WordCount:
+    type: Integer
+polymorphic:
+  identity: article
+```
+
+Output (.go):
+
+```go
+package models
+
+type Article struct {
+    BaseContentItem
+    Content   string
+    WordCount int
+}
+
+func NewArticle(id uint, title, content string, wordCount int) *Article {
+    return &Article{
+        BaseContentItem: BaseContentItem{
+            ID:    id,
+            Title: title,
+            Type:  ContentItemTypeArticle,
+        },
+        Content:   content,
+        WordCount: wordCount,
+    }
+}
+```
+
+### Polymorphic Factory Functions
+
+```go
+package models
+
+func NewContentItemFromType(itemType ContentItemType, data map[string]interface{}) (ContentItem, error) {
+    switch itemType {
+    case ContentItemTypeArticle:
+        return &Article{
+            BaseContentItem: BaseContentItem{
+                ID:    data["id"].(uint),
+                Title: data["title"].(string),
+                Type:  itemType,
+            },
+            Content:   data["content"].(string),
+            WordCount: data["word_count"].(int),
+        }, nil
+    case ContentItemTypeVideo:
+        return &Video{
+            BaseContentItem: BaseContentItem{
+                ID:    data["id"].(uint),
+                Title: data["title"].(string),
+                Type:  itemType,
+            },
+            Duration:   data["duration"].(int),
+            Resolution: data["resolution"].(string),
+        }, nil
+    default:
+        return nil, errors.New("unknown content item type")
+    }
+}
+```
+
+## Aliased Relationships
+
+### Aliased Model Relationships
+
+Input (.mod file):
+
+```yaml
+name: Company
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Owner:
+    type: HasOne
+    aliased: Person
+  Employees:
+    type: HasMany
+    aliased: Person
+```
+
+Output (.go):
+
+```go
+package models
+
+type Company struct {
+    ID          uint
+    Name        string
+    OwnerID     *uint
+    Owner       *Person  // Aliased to Person
+    EmployeeIDs []uint
+    Employees   []Person // Aliased to Person
+}
+
+type CompanyIDPrimary struct {
+    ID uint
+}
+
+// Type-safe access methods for aliased relationships
+func (c *Company) GetOwner() *Person {
+    return c.Owner
+}
+
+func (c *Company) SetOwner(person *Person) {
+    c.Owner = person
+    if person != nil {
+        c.OwnerID = &person.ID
+    } else {
+        c.OwnerID = nil
+    }
+}
+
+func (c *Company) GetEmployees() []Person {
+    return c.Employees
+}
+
+func (c *Company) AddEmployee(person Person) {
+    c.Employees = append(c.Employees, person)
+    c.EmployeeIDs = append(c.EmployeeIDs, person.ID)
+}
+```
+
+### Aliased Entity Relationships
+
+Input (.ent file):
+
+```yaml
+name: CompanyProfile
+fields:
+  ID:
+    type: Company.ID
+  Name:
+    type: Company.Name
+  OwnerName:
+    type: Company.Owner.Name
+  EmployeeCount:
+    type: Company.Employees.Count
+identifiers:
+  primary: ID
+```
+
+Output (.go):
+
+```go
+package entities
+
+type CompanyProfile struct {
+    ID            uint
+    Name          string
+    OwnerName     string
+    EmployeeCount int
+}
+
+type CompanyProfileIDPrimary struct {
+    ID uint
+}
+
+// Constructor with aliased relationship field resolution
+func NewCompanyProfile(company models.Company) CompanyProfile {
+    profile := CompanyProfile{
+        ID:            company.ID,
+        Name:          company.Name,
+        EmployeeCount: len(company.Employees),
+    }
+    
+    if company.Owner != nil {
+        profile.OwnerName = company.Owner.Name
+    }
+    
+    return profile
+}
+```
+
 ## Type Mappings
 
 Morphe Type | Go Type

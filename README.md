@@ -262,6 +262,141 @@ Each relationship is characterized by an ownership and a cardinality that differ
 * `Many`: Relationships have a cardinality of many, when the current model's relationship supports a variable number of related model instances.
   * *Example:* "Owner HasMany Address": Owner is related to many addresses.
 
+#### Aliased Relationships
+
+Aliased relationships allow multiple relationships to reference the same target model with different semantic meanings. This is useful when a single model serves multiple roles in relation to another model.
+
+*Example:* A `Company` model with both `Owner` and `Employees` relationships to the `Person` model:
+
+```yaml
+name: Company
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Owner:
+    type: HasOne
+    aliased: Person
+  Employees:
+    type: HasMany
+    aliased: Person
+```
+
+The `aliased` attribute specifies the actual target model, while the relationship name (`Owner`, `Employees`) provides semantic context. This enables:
+
+1. **Clear Intent**: Each relationship has a distinct meaning and purpose
+2. **Type Safety**: Both relationships reference the same underlying model
+3. **Flexible Modeling**: One model can serve multiple roles in different contexts
+4. **Entity Field Indirection**: Entities can reference specific aliased relationships
+
+*Example:* Entity using aliased relationship fields:
+
+```yaml
+name: CompanyProfile
+fields:
+  ID:
+    type: Company.ID
+  Name:
+    type: Company.Name
+  OwnerName:
+    type: Company.Owner.Name
+  EmployeeCount:
+    type: Company.Employees.Count
+```
+
+## Polymorphism
+
+Polymorphism in Morphe enables inheritance hierarchies where models and entities can be extended by more specific types. This allows for object-oriented modeling patterns where common attributes are defined in base classes, and specialized attributes are defined in subclasses.
+
+### Polymorphic Models
+
+Polymorphic models use a discriminator mechanism to differentiate between different types stored within the same logical structure. The base model defines the common attributes and discriminator configuration, while subclasses define their specialized attributes.
+
+*Example:* Base `ContentItem` model with `Article` and `Video` subclasses:
+
+```yaml
+# content_item.mod (base model)
+name: ContentItem
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+  Type:
+    type: String
+identifiers:
+  primary: ID
+polymorphic:
+  discriminator: Type
+  identity: content_item
+```
+
+```yaml
+# article.mod (subclass)
+name: Article
+extends: ContentItem
+fields:
+  Content:
+    type: String
+  WordCount:
+    type: Integer
+polymorphic:
+  identity: article
+```
+
+```yaml
+# video.mod (subclass)
+name: Video
+extends: ContentItem
+fields:
+  Duration:
+    type: Integer
+  Resolution:
+    type: String
+polymorphic:
+  identity: video
+```
+
+### Polymorphic Entities
+
+Entities can also leverage polymorphism to create specialized views over polymorphic model hierarchies:
+
+```yaml
+# content_summary.ent
+name: ContentSummary
+extends: ContentItem
+fields:
+  ID:
+    type: ContentItem.ID
+  Title:
+    type: ContentItem.Title
+  Type:
+    type: ContentItem.Type
+  Summary:
+    type: ContentItem.Content  # For articles
+    fallback: ContentItem.Duration  # For videos
+polymorphic:
+  identity: content_summary
+```
+
+### Polymorphic Configuration
+
+- **`discriminator`**: Field name that stores the type identifier
+- **`identity`**: Unique identifier for each type in the hierarchy
+- **`extends`**: Specifies the parent model/entity to inherit from
+- **`fallback`**: Alternative field resolution for entity field mappings
+
+### Benefits
+
+1. **Code Reuse**: Common attributes defined once in base classes
+2. **Type Safety**: Polymorphic loading ensures correct type instantiation
+3. **Flexible Queries**: Query base types to retrieve all subclasses
+4. **Extensibility**: Add new subclasses without modifying existing code
+
 ## Entities
 
 Entities are indirect data structures that route internally to model field subsets for business data flattening and aggregation. They are analogous to SQL views, decoupling domain data from underlying technical data structures (Models).
