@@ -4,6 +4,20 @@
 
 This document specifies the YAML format for defining Morphe (`KA:MO1`) data models. The `KA:MO1:YAML1` standard ensures consistent and predictable YAML structure across projects.
 
+## Supported Features
+
+The `KA:MO1:YAML1` format supports all core Morphe specification features:
+
+✅ **Models** - Primary persisted data structures  
+✅ **Entities** - Business data aggregation structures  
+✅ **Enums** - Predefined constant value sets  
+✅ **Structures** - Standalone, non-persisted field groupings  
+✅ **EnumFields** - Using enums as field types  
+✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
+✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
+🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
+🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+
 ## File Extensions
 
 - `.mod` - Model definitions
@@ -95,6 +109,70 @@ related:
     type: ForMany
 ```
 
+### Polymorphic Relationships
+
+#### HasOnePoly and HasManyPoly
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+#### ForOnePoly and ForManyPoly
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: AutoIncrement
+  Content:
+    type: String
+  CreatedAt:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+```yaml
+name: Tag
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+  Color:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Taggable:
+    type: ForManyPoly
+    for:
+      - Person
+      - Company
+```
+
 ## Enumerations
 
 *Example (string):*
@@ -117,6 +195,25 @@ entries:
   Euler: 2.71828182846
   GoldenRatio: 1.61803398875
   SilverRatio: 2.41421356237
+```
+
+### EnumFields - Using Enums as Field Types
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+  Nationality:
+    type: Nationality  # References the Nationality enum
+  FavoriteConstant:
+    type: MathematicalConstant  # References the MathematicalConstant enum
+identifiers:
+  primary: ID
 ```
 
 ## Structures
@@ -178,6 +275,79 @@ identifiers:
 related:
   Person:
     type: HasMany
+```
+
+### Polymorphic Relationships
+
+#### HasOnePoly and HasManyPoly
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: Person.ID
+    attributes:
+      - immutable
+      - mandatory
+  LastName:
+    type: Person.LastName
+  Nationality:
+    type: Person.Nationality
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+#### ForOnePoly and ForManyPoly
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: Comment.ID
+    attributes:
+      - immutable
+      - mandatory
+  Content:
+    type: Comment.Content
+  CreatedAt:
+    type: Comment.CreatedAt
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+```yaml
+name: Tag
+fields:
+  ID:
+    type: Tag.ID
+    attributes:
+      - immutable
+      - mandatory
+  Name:
+    type: Tag.Name
+  Color:
+    type: Tag.Color
+identifiers:
+  primary: ID
+related:
+  Taggable:
+    type: ForManyPoly
+    for:
+      - Person
+      - Company
 ```
 
 ## Field Types

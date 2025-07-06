@@ -4,6 +4,20 @@
 
 This document specifies how Morphe (KA:MO1:YAML1) models are transpiled into TypeScript type definitions. The KA:MO1:YAML1->TS1 standard ensures consistent and predictable TypeScript output across projects.
 
+## Supported Features
+
+The `KA:MO1:YAML1->TS1` transpilation standard supports the following Morphe specification features:
+
+✅ **Models** - Transpiled to TypeScript type definitions  
+✅ **Entities** - Transpiled to TypeScript type definitions with model field references  
+✅ **Enums** - Transpiled to TypeScript enums  
+✅ **Structures** - Transpiled to TypeScript type definitions  
+✅ **EnumFields** - Enum types used as field types  
+✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
+✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
+🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
+🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+
 ## Models
 
 ### Basic Model with Fields
@@ -184,6 +198,96 @@ export type TagIDPrimary = {
 }
 ```
 
+### Polymorphic Relationships
+
+#### HasOnePoly and HasManyPoly
+
+Input (.mod file):
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+Output (.d.ts):
+
+```ts
+import { Comment } from "./comment"
+import { Tag } from "./tag"
+
+export type Person = {
+  id: number
+  firstName: string
+  lastName: string
+  commentID?: number
+  comment?: Comment
+  tagIDs?: string[]
+  tags?: Tag[]
+}
+
+export type PersonIDPrimary = {
+  id: number
+}
+```
+
+#### ForOnePoly and ForManyPoly
+
+Input (.mod file):
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: AutoIncrement
+  Content:
+    type: String
+  CreatedAt:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+Output (.d.ts):
+
+```ts
+import { Person } from "./person"
+import { Company } from "./company"
+
+export type Comment = {
+  id: number
+  content: string
+  createdAt: string
+  commentableID?: string
+  commentableType?: string
+  commentable?: Person | Company
+}
+
+export type CommentIDPrimary = {
+  id: number
+}
+```
+
 ## Enumerations
 
 Input (.enum file):
@@ -204,6 +308,46 @@ export enum UserRole {
   Admin = "ADMIN",
   Editor = "EDITOR",
   Viewer = "VIEWER"
+}
+```
+
+### EnumFields - Using Enums as Field Types
+
+Input (.mod file):
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+  Nationality:
+    type: Nationality
+  Role:
+    type: UserRole
+identifiers:
+  primary: ID
+```
+
+Output (.d.ts):
+
+```ts
+import { Nationality } from "../enums/nationality"
+import { UserRole } from "../enums/user-role"
+
+export type Person = {
+  id: number
+  firstName: string
+  lastName: string
+  nationality: Nationality
+  role: UserRole
+}
+
+export type PersonIDPrimary = {
+  id: number
 }
 ```
 

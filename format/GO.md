@@ -4,6 +4,20 @@
 
 This document specifies how Morphe (KA:MO1:YAML1) models are transpiled into Go structs and types. The KA:MO1:YAML1->GO1 standard ensures consistent and predictable Go output across projects.
 
+## Supported Features
+
+The `KA:MO1:YAML1->GO1` transpilation standard supports the following Morphe specification features:
+
+✅ **Models** - Transpiled to Go structs  
+✅ **Entities** - Transpiled to Go structs with model field references  
+✅ **Enums** - Transpiled to Go constants and types  
+✅ **Structures** - Transpiled to Go structs  
+✅ **EnumFields** - Enum types used as field types  
+✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
+✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
+🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
+🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+
 ## Models
 
 ### Basic Model with Fields
@@ -154,6 +168,94 @@ type ContactInfoIDPrimary struct {
 }
 ```
 
+### Polymorphic Relationships
+
+#### HasOnePoly and HasManyPoly
+
+Input (.mod file):
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+Output (.go):
+
+```go
+package models
+
+type Person struct {
+    ID             uint
+    FirstName      string
+    LastName       string
+    CommentID      *uint
+    Comment        *Comment
+    TagIDs         []string
+    Tags           []Tag
+}
+
+type PersonIDPrimary struct {
+    ID uint
+}
+```
+
+#### ForOnePoly and ForManyPoly
+
+Input (.mod file):
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: AutoIncrement
+  Content:
+    type: String
+  CreatedAt:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+Output (.go):
+
+```go
+package models
+
+type Comment struct {
+    ID              uint
+    Content         string
+    CreatedAt       string
+    CommentableID   *uint
+    CommentableType *string
+    Commentable     any // Person or Company
+}
+
+type CommentIDPrimary struct {
+    ID uint
+}
+```
+
 ## Enumerations
 
 Input (.enum file):
@@ -179,6 +281,46 @@ const (
     NationalityDE Nationality = "German"
     NationalityFR Nationality = "French"
 )
+```
+
+### EnumFields - Using Enums as Field Types
+
+Input (.mod file):
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+  Nationality:
+    type: Nationality
+identifiers:
+  primary: ID
+```
+
+Output (.go):
+
+```go
+package models
+
+import (
+    "github.com/org/pkg/enums"
+)
+
+type Person struct {
+    ID          uint
+    FirstName   string
+    LastName    string
+    Nationality enums.Nationality
+}
+
+type PersonIDPrimary struct {
+    ID uint
+}
 ```
 
 ## Structures

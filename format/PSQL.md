@@ -10,6 +10,20 @@ TODO: Document:
 
 This document specifies how Morphe (`KA:MO1:YAML1`) models are transpiled into PostgreSQL database schemas. The `KA:MO1:YAML1->PSQL1` standard ensures consistent and predictable PostgreSQL schema generation across projects.
 
+## Supported Features
+
+The `KA:MO1:YAML1->PSQL1` transpilation standard supports the following Morphe specification features:
+
+✅ **Models** - Transpiled to PostgreSQL tables  
+✅ **Entities** - Transpiled to PostgreSQL views  
+✅ **Enums** - Transpiled to PostgreSQL lookup tables  
+❌ **Structures** - Not persisted (conceptually non-persisted)  
+✅ **EnumFields** - Foreign key references to enum lookup tables  
+✅ **ModelRelationPolymorphism** - Junction tables with polymorphic keys  
+✅ **EntityRelationPolymorphism** - Views with polymorphic joins  
+🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
+🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+
 ## Models
 
 ### Basic Model with Fields
@@ -261,6 +275,106 @@ CREATE TABLE article_tags (
 -- Other indices ...
 ```
 
+### Polymorphic Relationships
+
+#### HasOnePoly and HasManyPoly
+
+Input (.mod file):
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE TABLE people (
+    id SERIAL PRIMARY KEY,
+    first_name TEXT,
+    last_name TEXT
+);
+
+-- Polymorphic junction table for HasOnePoly relationship
+CREATE TABLE commentables (
+    id SERIAL PRIMARY KEY,
+    person_id INTEGER,
+    commentable_type TEXT NOT NULL,
+    commentable_id INTEGER NOT NULL,
+    CONSTRAINT fk_commentables_person_id FOREIGN KEY (person_id)
+      REFERENCES people(id)
+      ON DELETE CASCADE,
+    CONSTRAINT uk_commentables_person_id UNIQUE (person_id)
+);
+
+-- Polymorphic junction table for HasManyPoly relationship  
+CREATE TABLE taggables (
+    id SERIAL PRIMARY KEY,
+    person_id INTEGER,
+    taggable_type TEXT NOT NULL,
+    taggable_id INTEGER NOT NULL,
+    CONSTRAINT fk_taggables_person_id FOREIGN KEY (person_id)
+      REFERENCES people(id)
+      ON DELETE CASCADE
+);
+
+CREATE INDEX idx_commentables_person_id ON commentables(person_id);
+CREATE INDEX idx_commentables_type_id ON commentables(commentable_type, commentable_id);
+CREATE INDEX idx_taggables_person_id ON taggables(person_id);
+CREATE INDEX idx_taggables_type_id ON taggables(taggable_type, taggable_id);
+```
+
+#### ForOnePoly and ForManyPoly
+
+Input (.mod file):
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: AutoIncrement
+  Content:
+    type: String
+  CreatedAt:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    content TEXT,
+    created_at TEXT,
+    commentable_type TEXT NOT NULL,
+    commentable_id INTEGER NOT NULL
+);
+
+CREATE INDEX idx_comments_commentable ON comments(commentable_type, commentable_id);
+```
 
 ## Enumerations
 
@@ -292,6 +406,40 @@ VALUES
     ('US', 'American'),
     ('DE', 'German'),
     ('FR', 'French');
+```
+
+### EnumFields - Using Enums as Field Types
+
+When enums are used as field types in models, they are transpiled as foreign key references to the enum lookup tables.
+
+Input (.mod file):
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+  Nationality:
+    type: Nationality
+identifiers:
+  primary: ID
+```
+
+Output (PostgreSQL):
+
+```sql
+CREATE TABLE persons (
+    id SERIAL PRIMARY KEY,
+    "name" TEXT,
+    nationality_id INTEGER NOT NULL,
+    CONSTRAINT fk_persons_nationality_id FOREIGN KEY (nationality_id)
+      REFERENCES nationalities(id)
+      ON DELETE CASCADE
+);
+
+CREATE INDEX idx_persons_nationality_id ON persons(nationality_id);
 ```
 
 Benefits of lookup tables:
