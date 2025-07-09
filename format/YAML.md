@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document specifies the YAML format for defining Morphe (`KA:MO1`) data models. The `KA:MO1:YAML1` standard ensures consistent and predictable YAML structure across projects.
+This document specifies the YAML format for defining Morphe (`KA:MO1`) data models. The `KA:MO1:YAML1` format serves as the canonical base format for the Morphe ecosystem, providing a human-readable syntax for defining models, entities, enums, and structures.
 
 ## Supported Features
 

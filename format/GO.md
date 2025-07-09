@@ -1,17 +1,19 @@
-# Go Transpilation Standard (KA:MO1:YAML1->GO1)
+# Go Format Specification (KA:MO1:GO1)
 
 ## Overview
 
-This document specifies how Morphe (KA:MO1:YAML1) models are transpiled into Go structs and types. The KA:MO1:YAML1->GO1 standard ensures consistent and predictable Go output across projects.
+This document specifies how Morphe specification concepts are represented in Go. The `KA:MO1:GO1` format provides Go structs and types that correspond to Morphe data models, entities, enums, and structures.
+
+*Note: Examples reference the base YAML format for clarity, as YAML serves as the canonical representation in the Morphe ecosystem.*
 
 ## Supported Features
 
-The `KA:MO1:YAML1->GO1` transpilation standard supports the following Morphe specification features:
+The `KA:MO1:GO1` format supports the following Morphe specification features:
 
-✅ **Models** - Transpiled to Go structs  
-✅ **Entities** - Transpiled to Go structs with model field references  
-✅ **Enums** - Transpiled to Go constants and types  
-✅ **Structures** - Transpiled to Go structs  
+✅ **Models** - Represented as Go structs  
+✅ **Entities** - Represented as Go structs with model field references  
+✅ **Enums** - Represented as Go constants and types  
+✅ **Structures** - Represented as Go structs  
 ✅ **EnumFields** - Enum types used as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
@@ -22,7 +24,7 @@ The `KA:MO1:YAML1->GO1` transpilation standard supports the following Morphe spe
 
 ### Basic Model with Fields
 
-Input (.mod file):
+A basic model with fields and identifiers:
 
 ```yaml
 name: Person
@@ -42,7 +44,7 @@ identifiers:
     - LastName
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -65,7 +67,7 @@ type PersonIDName struct {
 
 ### HasOne Relationship
 
-Input (.mod file):
+A model with a HasOne relationship:
 
 ```yaml
 name: Person
@@ -81,7 +83,7 @@ related:
     type: HasOne
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -100,7 +102,7 @@ type PersonIDPrimary struct {
 
 ### HasMany Relationship
 
-Input (.mod file):
+A model with a HasMany relationship:
 
 ```yaml
 name: Company
@@ -116,7 +118,7 @@ related:
     type: HasMany
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -135,7 +137,7 @@ type CompanyIDPrimary struct {
 
 ### ForOne Relationship
 
-Input (.mod file):
+A model with a ForOne relationship:
 
 ```yaml
 name: ContactInfo
@@ -151,7 +153,7 @@ related:
     type: ForOne
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -172,7 +174,7 @@ type ContactInfoIDPrimary struct {
 
 #### HasOnePoly and HasManyPoly
 
-Input (.mod file):
+A model with polymorphic HasOne and HasMany relationships:
 
 ```yaml
 name: Person
@@ -194,7 +196,7 @@ related:
     through: Taggable
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -216,7 +218,7 @@ type PersonIDPrimary struct {
 
 #### ForOnePoly and ForManyPoly
 
-Input (.mod file):
+A model with a polymorphic ForOne relationship:
 
 ```yaml
 name: Comment
@@ -237,7 +239,7 @@ related:
       - Company
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -258,7 +260,7 @@ type CommentIDPrimary struct {
 
 ## Enumerations
 
-Input (.enum file):
+An enumeration definition:
 
 ```yaml
 name: Nationality
@@ -269,7 +271,7 @@ entries:
   FR: 'French'
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package enums
@@ -285,7 +287,7 @@ const (
 
 ### EnumFields - Using Enums as Field Types
 
-Input (.mod file):
+A model using enums as field types:
 
 ```yaml
 name: Person
@@ -302,7 +304,7 @@ identifiers:
   primary: ID
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package models
@@ -325,7 +327,7 @@ type PersonIDPrimary struct {
 
 ## Structures
 
-Input (.str file):
+A structure definition:
 
 ```yaml
 name: Address
@@ -340,7 +342,7 @@ fields:
     type: String
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package structures
@@ -359,7 +361,7 @@ Entities are high-level business objects that can combine and transform fields f
 
 ### Basic Entity
 
-Input (.ent file):
+A basic entity with referenced model fields:
 
 ```yaml
 name: Person
@@ -382,7 +384,7 @@ related:
     type: ForOne
 ```
 
-Output (.go):
+Go representation:
 
 ```go
 package entities

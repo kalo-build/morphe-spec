@@ -1,17 +1,19 @@
-# TypeScript Transpilation Standard (KA:MO1:YAML1->TS1)
+# TypeScript Format Specification (KA:MO1:TS1)
 
 ## Overview
 
-This document specifies how Morphe (KA:MO1:YAML1) models are transpiled into TypeScript type definitions. The KA:MO1:YAML1->TS1 standard ensures consistent and predictable TypeScript output across projects.
+This document specifies how Morphe specification concepts are represented in TypeScript. The `KA:MO1:TS1` format provides TypeScript type definitions that correspond to Morphe data models, entities, enums, and structures.
+
+*Note: Examples reference the base YAML format for clarity, as YAML serves as the canonical representation in the Morphe ecosystem.*
 
 ## Supported Features
 
-The `KA:MO1:YAML1->TS1` transpilation standard supports the following Morphe specification features:
+The `KA:MO1:TS1` format supports the following Morphe specification features:
 
-✅ **Models** - Transpiled to TypeScript type definitions  
-✅ **Entities** - Transpiled to TypeScript type definitions with model field references  
-✅ **Enums** - Transpiled to TypeScript enums  
-✅ **Structures** - Transpiled to TypeScript type definitions  
+✅ **Models** - Represented as TypeScript type definitions  
+✅ **Entities** - Represented as TypeScript type definitions with model field references  
+✅ **Enums** - Represented as TypeScript enums  
+✅ **Structures** - Represented as TypeScript type definitions  
 ✅ **EnumFields** - Enum types used as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
@@ -22,7 +24,7 @@ The `KA:MO1:YAML1->TS1` transpilation standard supports the following Morphe spe
 
 ### Basic Model with Fields
 
-Input (.mod file):
+A basic model with fields and identifiers:
 
 ```yaml
 name: User
@@ -40,7 +42,7 @@ identifiers:
   email: Email
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 export type User = {
@@ -60,7 +62,7 @@ export type UserIDEmail = {
 
 ### HasOne Relationship
 
-Input (.mod file):
+A model with a HasOne relationship:
 
 ```yaml
 name: Person
@@ -76,7 +78,7 @@ related:
     type: HasOne
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { ContactInfo } from "./contact-info"
@@ -95,7 +97,7 @@ export type PersonIDPrimary = {
 
 ### HasMany Relationship
 
-Input (.mod file):
+A model with a HasMany relationship:
 
 ```yaml
 name: Company
@@ -111,7 +113,7 @@ related:
     type: HasMany
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Employee } from "./employee"
@@ -130,7 +132,7 @@ export type CompanyIDPrimary = {
 
 ### ForOne Relationship
 
-Input (.mod file):
+A model with a ForOne relationship:
 
 ```yaml
 name: ContactInfo
@@ -146,7 +148,7 @@ related:
     type: ForOne
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Person } from "./person"
@@ -165,23 +167,23 @@ export type ContactInfoIDPrimary = {
 
 ### ForMany Relationship
 
-Input (.mod file):
+A model with a ForMany relationship:
 
 ```yaml
-    name: Tag
-    fields:
-      ID:
-        type: AutoIncrement
-      Name:
-        type: String
-    identifiers:
-      primary: ID
-    related:
-      Article:
-        type: ForMany
+name: Tag
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Article:
+    type: ForMany
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Article } from "./article"
@@ -202,7 +204,7 @@ export type TagIDPrimary = {
 
 #### HasOnePoly and HasManyPoly
 
-Input (.mod file):
+A model with polymorphic HasOne and HasMany relationships:
 
 ```yaml
 name: Person
@@ -224,7 +226,7 @@ related:
     through: Taggable
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Comment } from "./comment"
@@ -247,7 +249,7 @@ export type PersonIDPrimary = {
 
 #### ForOnePoly and ForManyPoly
 
-Input (.mod file):
+A model with a polymorphic ForOne relationship:
 
 ```yaml
 name: Comment
@@ -268,7 +270,7 @@ related:
       - Company
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Person } from "./person"
@@ -290,7 +292,7 @@ export type CommentIDPrimary = {
 
 ## Enumerations
 
-Input (.enum file):
+An enumeration definition:
 
 ```yaml
 name: UserRole
@@ -301,7 +303,7 @@ entries:
   Viewer: VIEWER
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 export enum UserRole {
@@ -313,7 +315,7 @@ export enum UserRole {
 
 ### EnumFields - Using Enums as Field Types
 
-Input (.mod file):
+A model using enums as field types:
 
 ```yaml
 name: Person
@@ -332,7 +334,7 @@ identifiers:
   primary: ID
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Nationality } from "../enums/nationality"
@@ -353,7 +355,7 @@ export type PersonIDPrimary = {
 
 ## Structures
 
-Input (.str file):
+A structure definition:
 
 ```yaml
 name: Address
@@ -368,7 +370,7 @@ fields:
     type: String
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 export type Address = {
@@ -386,7 +388,7 @@ Entities are high-level business objects that can combine and transform fields f
 
 ### Basic Entity
 
-Input (.ent file):
+A basic entity with referenced model fields:
 
 ```yaml
 name: Person
@@ -409,7 +411,7 @@ related:
     type: ForOne
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Nationality } from "../enums/nationality"
@@ -431,7 +433,7 @@ export type PersonIDPrimary = {
 
 ### Entity with HasMany Relationship
 
-Input (.ent file):
+An entity with a HasMany relationship:
 
 ```yaml
 name: Company
@@ -452,7 +454,7 @@ related:
     type: HasMany
 ```
 
-Output (.d.ts):
+TypeScript representation:
 
 ```ts
 import { Person } from "./person"
@@ -479,11 +481,11 @@ export type CompanyIDPrimary = {
 
 2. Type Resolution
    - Entity field types are resolved from their referenced model fields
-   - Relationships are preserved and transformed the same way as models
+   - Relationships are preserved and represented the same way as models
    - Enums are imported from their respective locations
 
-3. Generated Output
-   - Entities generate similar TypeScript types to models
+3. TypeScript Representation
+   - Entities are represented as TypeScript types similar to models
    - Import paths are adjusted to maintain correct references
    - All relationships are optional by default in entities
 
