@@ -6,11 +6,13 @@
   - [Overview](#overview)
   - [Specification Versions](#specification-versions)
   - [Key Features](#key-features)
+  - [Specification Features](#specification-features)
   - [Motivation](#motivation)
   - [Field Types](#field-types)
     - [Atomic Field Types](#atomic-field-types)
     - [Enumeration Field Types](#enumeration-field-types)
   - [Structures](#structures)
+  - [Enums](#enums)
   - [Models](#models)
     - [Model Fields](#model-fields)
     - [Identifiers](#identifiers)
@@ -31,19 +33,17 @@
 
 Morphe (KA:MO1) is a simple, human-readable base data modeling specification designed to facilitate consistent transpilation of models into multiple programming languages.
 
-The name represents the ancient Greek "form" or "shape", implying an ideal form or prototype from which other forms are derived. This symbolizes how declaratively modelled data in YAML is generatively transformed into code.
+The name represents the ancient Greek "form" or "shape", implying an ideal form or prototype from which other forms are derived. This symbolizes how declaratively modelled data is generatively transformed into code across different formats and languages.
 
 ## Specification Versions
 
-Version | Status | Description | Repo
+Version | Status | Description | Docs
 --------|---------|------------|------
-KA:MO1 | 🚧 In Progress | First stable release of the Morphe core specification | [kaloseia/morphe-spec](https://github.com/kaloseia/morphe-spec)
-KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [kaloseia/morphe-yaml-spec](https://github.com/kaloseia/morphe-yaml-spec)
-KA:MO1:YAML1->TS1 | 🚧 In Progress | TypeScript transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-ts-spec](https://github.com/kaloseia/morphe-yaml-ts-spec)
-KA:MO1:YAML1->GO1 | 🚧 In Progress | Go transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-go-spec](https://github.com/kaloseia/morphe-yaml-go-spec)
-KA:MO1:YAML1->PSQL1 | 🚧 In Progress | PostgreSQL transpilation standard from YAML for specification format KA:MO1:YAML1 | [kaloseia/morphe-yaml-psql-spec](https://github.com/kaloseia/morphe-yaml-psql-spec)
-
-This document specifies the YAML format for defining Morphe data models. The `KA:MO1:YAML1` standard ensures consistent and predictable YAML structure across projects.
+KA:MO1 | 🚧 In Progress | First stable release of the Morphe core specification | This document
+KA:MO1:YAML1 | 🚧 In Progress | YAML format standard for KA:MO1 | [format/YAML.md](format/YAML.md)
+KA:MO1:TS1 | 🚧 In Progress | TypeScript format standard for KA:MO1 | [format/TS.md](format/TS.md)
+KA:MO1:GO1 | 🚧 In Progress | Go format standard for KA:MO1 | [format/GO.md](format/GO.md)
+KA:MO1:PSQL1 | 🚧 In Progress | PostgreSQL format standard for KA:MO1 | [format/PSQL.md](format/PSQL.md)
 
 ## Specification Hierarchy
 
@@ -51,27 +51,48 @@ The Morphe specification system uses a hierarchical naming scheme to clearly ide
 
 ### Base Specification (`KA:MO1`)
 - `KA:` - Organization/context prefix
-- `MO1:` - Base specification identifier (Morphe version 1)
+- `MO1` - Base specification identifier (Morphe version 1)
 - *Example:* `KA:MO1` - The core Morphe data modeling specification
 
 ### Format Specification (`KA:MO1:YAML1`)
 - Extends base specification with format identifier
-- `YAML1:` - Format representation identifier (YAML version 1)
+- `YAML1` - Format representation identifier (YAML version 1)
 - *Example:* `KA:MO1:YAML1` - The YAML format specification for Morphe
 
-### Transpilation Specification (`KA:MO1:YAML1->GO1`)
-- Extends format specification with target format
-- `->GO1:` - Target format identifier (Go version 1)
-- *Example:* `KA:MO1:YAML1->GO1` - The Go transpilation specification for Morphe YAML
+### Base Format
+To rally ecosystem support around a canonical standard, specifications can define a "base format" that serves as the primary reference implementation. For Morphe, **YAML** (`KA:MO1:YAML1`) serves as the base format, providing:
+
+- **Canonical Reference**: All examples and documentation use YAML as the primary format
+- **Ecosystem Alignment**: Plugin developers can focus on YAML-first implementations
+- **Interoperability**: A common format that all tools and implementations can understand
+- **Developer Experience**: Consistent, human-readable syntax across the ecosystem
+
+Other formats (Go, TypeScript, PostgreSQL) are considered transpilation targets from the base YAML format.
+
+### Examples in Base Specification
+This specification uses **YAML examples** rather than pseudo-code for the following reasons:
+
+**Advantages of YAML Examples:**
+- **Concrete Implementation**: Provides actionable, copy-pasteable examples
+- **Canonical Reference**: Serves as the authoritative syntax reference
+- **Developer Experience**: Immediately usable examples reduce learning curve
+- **Consistency**: Aligns with the base format used across the ecosystem
+- **Validation**: Real syntax can be tested and validated
+
+**Trade-offs Considered:**
+- **Format Coupling**: Examples are tied to YAML syntax, but this is mitigated by YAML being the canonical base format
+- **Abstraction Level**: Less abstract than pseudo-code, but the concrete examples provide more value for implementation
+
+Since YAML serves as Morphe's base format, using YAML examples creates a cohesive developer experience while maintaining the specification's practical utility.
 
 ### Motivation
 
 This hierarchical naming scheme provides several benefits:
-1. Clear separation between base concepts, format representations, and transpilation targets
+1. Clear separation between base concepts and format representations
 2. Support for multiple format representations of the same base specification
-3. Ability to transpile between different formats (e.g., `KA:MO1:YAML1->GO1` and `KA:MO1:GO1->YAML1`)
+3. Ability to transpile between different formats (e.g., YAML to Go, YAML to TypeScript)
 4. Version tracking at each level of the specification
-5. Extensibility for future formats and transpilation targets
+5. Extensibility for future formats
 
 ### Example Specification Types
 
@@ -82,16 +103,12 @@ This hierarchical naming scheme provides several benefits:
    - `KA:MO1:YAML1` - YAML format representation
    - `KA:MO1:GO1` - Go format representation
    - `KA:MO1:TS1` - TypeScript format representation
-
-3. Transpilation Specifications:
-   - `KA:MO1:YAML1->GO1` - YAML to Go transpilation
-   - `KA:MO1:YAML1->TS1` - YAML to TypeScript transpilation
-   - `KA:MO1:YAML1->PSQL1` - YAML to PostgreSQL transpilation
+   - `KA:MO1:PSQL1` - PostgreSQL format representation
 
 ## Key Features
 
 1. 📖 **Single Source of Truth**
-   * Define your data models once in YAML
+   * Define your data models once in a structured format
    * Automatic code generation across your stack
    * Consistent type definitions across languages
    * Reduced manual synchronization effort
@@ -115,6 +132,50 @@ This hierarchical naming scheme provides several benefits:
    * Backward compatibility guidelines
    * Clear upgrade paths
 
+## Specification Features
+
+The Morphe specification defines a comprehensive set of features that compile plugins can implement. Each plugin can document which features it supports, ensuring clarity about capabilities and limitations.
+
+### Core Features
+
+| Feature | Description | Spec Status |
+|---------|-------------|--------|
+| **Models** | Primary persisted data structures with fields, identifiers, and relationships | ✅ Complete |
+| **Entities** | Business data aggregation structures that reference model fields | ✅ Complete |
+| **Enums** | Predefined constant value sets with primitive types | ✅ Complete |
+| **Structures** | Standalone, non-persisted field groupings for DTOs | ✅ Complete |
+
+### Advanced Features
+
+| Feature | Description | Spec Status |
+|---------|-------------|--------|
+| **EnumFields** | Using enums as field types in models, entities, and structures | ✅ Complete |
+| **ModelRelationPolymorphism** | Polymorphic relationships (HasOnePoly, HasManyPoly, ForOnePoly, ForManyPoly) in models | ✅ Complete |
+| **EntityRelationPolymorphism** | Polymorphic relationships in entities | ✅ Complete |
+| **ModelRelationAliasing** | Custom relationship naming and aliasing in models | 🚧 In Progress |
+| **EntityRelationAliasing** | Custom relationship naming and aliasing in entities | 🚧 In Progress |
+
+### Plugin Implementation
+
+Compile plugins should document their feature support using this standardized list. For example:
+
+```yaml
+# Plugin Feature Matrix
+supported_features:
+  - Models
+  - Entities
+  - Enums
+  - ModelRelationPolymorphism
+  - EntityRelationPolymorphism
+unsupported_features:
+  - ModelRelationAliasing
+  - EntityRelationAliasing
+  - EnumFields
+  - Structures
+```
+
+This ensures users understand exactly what functionality is available when using specific plugins.
+
 ## Motivation
 
 As your application's codebase grows, structural changes become increasingly expensive. 
@@ -134,7 +195,7 @@ Tooling exists to reduce the manual work needed for some of these steps. Common 
 
 The Morphe specification aims to provide a simple schema for automatically updating your code artifacts across technologies, eliminating human error, and accelerating development velocity. 
 
-By consolidating your application's data structures into a single source of truth for your entire stack, you only have to touch one place instead of many and let your selected plugins handle the rest.
+By consolidating your application's data structures into a single source of truth for your entire stack, you only have to touch one place instead of many and let your selected plugins handle the rest.
 
 ## Field Types
 
@@ -155,20 +216,24 @@ Atomic field types are type primitives that represent a single, indivisible unit
 
 ### Enumeration Field Types
 
-Enums are predefined sets of constant values that can be used as types for fields within models or structures. They enforce consistency by limiting possible values to a fixed set.
+Enums can be used as field types within models, entities, and structures by referencing their name. When used as a field type, the enum enforces that only predefined values from the enum's entries can be assigned to that field.
 
-Each enum consists of a name, a primitive type (`String`, `Integer`, `Float`), and a set of entries. Entries are defined as symbol names with an associated primitive representation.
-
-*Example:* `color.enum` in `KA:MO1:YAML1`
+*Example:* Using `Nationality` enum as a field type
 
 ```yaml
-name: Color
-type: String
-entries:
-  Red: 'red'
-  Blue: 'blue'
-  Green: 'green'
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  FirstName:
+    type: String
+  LastName:
+    type: String
+  Nationality:
+    type: Nationality  # References the Nationality enum
 ```
+
+See the [Enums](#enums) section for complete enum definition syntax and examples.
 
 ## Structures
 
@@ -178,11 +243,12 @@ Each structure consists of a `name`, and a set of `fields`.
 
 **Note:** Unlike models, structures do not have relationships or identifiers, as they are not persisted.
 
-*Example:* `address.str` in `KA:MO1:YAML1`
+*Example:* `address.str`
+
 ```yaml
 name: Address
 fields:
-  Street: 
+  Street:
     type: String
   HouseNr:
     type: String
@@ -192,40 +258,72 @@ fields:
     type: String
 ```
 
+## Enums
+
+Enums are predefined sets of constant values that can be used as types for fields within models, entities, and structures. They enforce consistency by limiting possible values to a fixed set.
+
+Each enum consists of a `name`, a primitive `type` (`String`, `Integer`, `Float`), and a set of `entries`. Entries are defined as symbol names with an associated primitive representation.
+
+*Example:* `nationality.enum`
+
+```yaml
+name: Nationality
+type: String
+entries:
+  US: 'American'
+  DE: 'German'
+  FR: 'French'
+```
+
+*Example:* `universal-number.enum`
+
+```yaml
+name: UniversalNumber
+type: Float
+entries:
+  Pi: 3.1415926535
+  Euler: 2.7182818285
+```
+
+### Enum Usage
+
+Enums can be used in three ways:
+
+1. **As Field Types**: Reference the enum name as a field type (see [Enumeration Field Types](#enumeration-field-types))
+2. **Data Validation**: Ensure only valid values are assigned to fields
+3. **Code Generation**: Generate constants, types, or lookup tables in target languages
+
 ## Models
 
 Models are the primary persisted data structures. They are somewhat analogous to relational SQL tables.
 
 Each model consists of a `name`, a set of `fields`, a set of `identifiers`, and `related` models.
 
-*Example:* `address.mod` in `KA:MO1:YAML1`
+*Example:* `person.mod`
+
 ```yaml
-name: Address
+name: Person
 fields:
-  UUID:
-    type: UUID
+  ID:
+    type: AutoIncrement
     attributes:
-      - immutable
-  Street:
+      - mandatory
+  FirstName:
     type: String
-  HouseNr:
+  LastName:
     type: String
-  ZipCode:
-    type: String
-  City:
-    type: String
+  Nationality:
+    type: Nationality
 identifiers:
-  primary: UUID
-  addr:
-    - Street
-    - HouseNr
-    - ZipCode
-    - City
+  primary: ID
+  name:
+    - FirstName
+    - LastName
 related:
-  User:
+  ContactInfo:
+    type: HasOne
+  Company:
     type: ForOne
-  Document:
-    type: HasMany
 ```
 
 ### Model Fields
@@ -262,32 +360,120 @@ Each relationship is characterized by an ownership and a cardinality that differ
 * `Many`: Relationships have a cardinality of many, when the current model's relationship supports a variable number of related model instances.
   * *Example:* "Owner HasMany Address": Owner is related to many addresses.
 
+### Polymorphic Relationships
+
+Polymorphic relationships allow models to be related to multiple different model types through a single association. Morphe supports four types of polymorphic relationships:
+
+#### HasOnePoly and HasManyPoly (with `through`)
+
+These relationships indicate that the current model "has" related models through a polymorphic interface.
+
+- `HasOnePoly`: One-to-one polymorphic relationship
+- `HasManyPoly`: One-to-many polymorphic relationship  
+- `through`: Specifies the polymorphic interface name
+
+*Example:* `person.mod` with polymorphic relationships
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+    attributes:
+      - mandatory
+  FirstName:
+    type: String
+  LastName:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+#### ForOnePoly and ForManyPoly (with `for`)
+
+These relationships indicate that the current model belongs to one or many of the specified model types.
+
+- `ForOnePoly`: Many-to-one polymorphic relationship
+- `ForManyPoly`: Many-to-many polymorphic relationship
+- `for`: Specifies the list of possible target model types
+
+*Example:* `comment.mod` with polymorphic relationship
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: AutoIncrement
+    attributes:
+      - mandatory
+  Content:
+    type: String
+  CreatedAt:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+*Example:* `tag.mod` with polymorphic relationship
+
+```yaml
+name: Tag
+fields:
+  ID:
+    type: AutoIncrement
+    attributes:
+      - mandatory
+  Name:
+    type: String
+  Color:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Taggable:
+    type: ForManyPoly
+    for:
+      - Person
+      - Company
+```
+
 ## Entities
 
 Entities are indirect data structures that route internally to model field subsets for business data flattening and aggregation. They are analogous to SQL views, decoupling domain data from underlying technical data structures (Models).
 
-Entities consist of a `name`, a set of `fields`, `identifiers`,and related `entities`. Identifiers and field types are inherited from models.
+Entities consist of a `name`, a set of `fields`, `identifiers`, and related `entities`. Identifiers and field types are inherited from models.
 
-*Example:* `user.ent` in `KA:MO1:YAML1`
+*Example:* `person.ent`
+
 ```yaml
-name: User
+name: Person
 fields:
-  UUID:
-    type: User.UUID
+  ID:
+    type: Person.ID
     attributes:
       - immutable
-  Name:
-    type: User.Name
-  Street:
-    type: User.Address.Street
-  HouseNr:
-    type: User.Address.HouseNr
-  ZipCode:
-    type: User.Address.ZipCode
-  City:
-    type: User.Address.City
+      - mandatory
+  LastName:
+    type: Person.LastName
+  Nationality:
+    type: Person.Nationality
+  Email:
+    type: Person.ContactInfo.Email
 identifiers:
-  primary: UUID
+  primary: ID
 related:
   Company:
     type: ForOne
@@ -329,9 +515,90 @@ Each relationship is characterized by an `ownership` and a `cardinality` that di
 * `Many`: The relationship supports multiple related entity instances.
   * *Example:* "Owner HasMany Address": Owner is related to many addresses.
 
+### Polymorphic Relationships
+
+Entities support the same polymorphic relationship types as models, allowing them to represent complex business relationships across multiple entity types.
+
+#### HasOnePoly and HasManyPoly (with `through`)
+
+*Example:* `person.ent` with polymorphic relationships
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: Person.ID
+    attributes:
+      - immutable
+      - mandatory
+  LastName:
+    type: Person.LastName
+  Nationality:
+    type: Person.Nationality
+identifiers:
+  primary: ID
+related:
+  Comment:
+    type: HasOnePoly
+    through: Commentable
+  Tag:
+    type: HasManyPoly
+    through: Taggable
+```
+
+#### ForOnePoly and ForManyPoly (with `for`)
+
+*Example:* `comment.ent` with polymorphic relationship
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: Comment.ID
+    attributes:
+      - immutable
+      - mandatory
+  Content:
+    type: Comment.Content
+  CreatedAt:
+    type: Comment.CreatedAt
+identifiers:
+  primary: ID
+related:
+  Commentable:
+    type: ForOnePoly
+    for:
+      - Person
+      - Company
+```
+
+*Example:* `tag.ent` with polymorphic relationship
+
+```yaml
+name: Tag
+fields:
+  ID:
+    type: Tag.ID
+    attributes:
+      - immutable
+      - mandatory
+  Name:
+    type: Tag.Name
+  Color:
+    type: Tag.Color
+identifiers:
+  primary: ID
+related:
+  Taggable:
+    type: ForManyPoly
+    for:
+      - Person
+      - Company
+```
+
 ## Contributing
 
-We welcome contributions to the Morphe specification and its language-specific implementations! Here's how you can help:
+We welcome contributions to the Morphe specification and its format-specific implementations! Here's how you can help:
 
 ### Types of Contributions
 
@@ -342,16 +609,16 @@ We welcome contributions to the Morphe specification and its language-specific i
    * Improving examples and use cases
 
 2. **Implementation Feedback**
-   * Testing language-specific transpilation standards
+   * Testing format-specific implementations
    * Reporting bugs or unexpected behavior
    * Suggesting optimizations for generated code
-   * Proposing new language implementations
+   * Proposing new format implementations
 
 ### How to Contribute
 
 1. **Issues First**
    * Start by creating an issue to discuss your proposed changes
-   * For bugs, include the specification version (e.g., KA:MO1, KA:MO1:YAML1->TS1)
+   * For bugs, include the specification version (e.g., KA:MO1, KA:MO1:YAML1)
    * For features, explain the use case and expected benefits
 
 2. **Pull Requests**
@@ -366,10 +633,10 @@ We welcome contributions to the Morphe specification and its language-specific i
    * Use clear, concise language
    * Provide examples for new features
    * Maintain consistent formatting with existing docs
-   * Follow YAML best practices in examples
+   * Follow format best practices in examples
 
 2. **Code Contributions**
-   * Follow the language-specific style guide
+   * Follow the format-specific style guide
    * Include tests for new features
    * Update documentation as needed
    * Ensure backwards compatibility
