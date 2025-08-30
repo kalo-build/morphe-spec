@@ -152,8 +152,8 @@ The Morphe specification defines a comprehensive set of features that compile pl
 | **EnumFields** | Using enums as field types in models, entities, and structures | ✅ Complete |
 | **ModelRelationPolymorphism** | Polymorphic relationships (HasOnePoly, HasManyPoly, ForOnePoly, ForManyPoly) in models | ✅ Complete |
 | **EntityRelationPolymorphism** | Polymorphic relationships in entities | ✅ Complete |
-| **ModelRelationAliasing** | Custom relationship naming and aliasing in models | 🚧 In Progress |
-| **EntityRelationAliasing** | Custom relationship naming and aliasing in entities | 🚧 In Progress |
+| **ModelRelationAliasing** | Custom relationship naming and aliasing in models | ✅ Complete |
+| **EntityRelationAliasing** | Custom relationship naming and aliasing in entities | ✅ Complete |
 
 ### Plugin Implementation
 
@@ -450,6 +450,66 @@ related:
       - Company
 ```
 
+### Relationship Aliasing
+
+Morphe supports relationship aliasing, which allows you to use custom names for relationships while referencing existing model types. This is particularly useful when a model needs multiple relationships to the same target model type.
+
+#### Model Relationship Aliasing
+
+Use the `aliased` property to specify the actual target model:
+
+*Example:* `person.mod` with aliased relationships
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+    attributes:
+      - mandatory
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkContact:
+    type: ForOne
+    aliased: Contact  # References the Contact model
+  PersonalContact:
+    type: ForOne
+    aliased: Contact  # Same target model with different relationship name
+  WorkProjects:
+    type: ForMany
+    aliased: Project
+  PersonalProjects:
+    type: ForMany
+    aliased: Project
+```
+
+#### Polymorphic Inverse Aliasing
+
+A special pattern for polymorphic relationships allows semantic field naming in generated types:
+
+*Example:* `post.mod` with polymorphic inverse aliasing
+
+```yaml
+name: Post
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Note:  # Semantic field name
+    type: HasOnePoly
+    through: Commentable
+    aliased: Comment  # Actual model type
+```
+
+This pattern is particularly useful for creating meaningful field names in generated code while maintaining the polymorphic relationship structure.
+
 ## Entities
 
 Entities are indirect data structures that route internally to model field subsets for business data flattening and aggregation. They are analogous to SQL views, decoupling domain data from underlying technical data structures (Models).
@@ -595,6 +655,39 @@ related:
       - Person
       - Company
 ```
+
+### Entity Relationship Aliasing
+
+Entities support the same aliasing patterns as models:
+
+*Example:* `person-profile.ent` with aliased relationships
+
+```yaml
+name: PersonProfile
+fields:
+  ID:
+    type: Person.ID
+    attributes:
+      - immutable
+      - mandatory
+  Name:
+    type: Person.Name
+  WorkEmail:
+    type: Person.WorkContact.Email  # Traversing through aliased relationship
+  PersonalPhone:
+    type: Person.PersonalContact.Phone
+identifiers:
+  primary: ID
+related:
+  PrimaryCompany:
+    type: ForOne
+    aliased: Company
+  SecondaryCompany:
+    type: ForOne
+    aliased: Company
+```
+
+Entity fields can traverse through aliased model relationships using the relationship name (not the aliased target). The aliasing resolution happens transparently during compilation.
 
 ## Contributing
 

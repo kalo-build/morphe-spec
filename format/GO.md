@@ -17,8 +17,8 @@ The `KA:MO1:GO1` format supports the following Morphe specification features:
 ✅ **EnumFields** - Enum types used as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
-🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
-🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+✅ **ModelRelationAliasing** - Custom relationship naming with proper type imports  
+✅ **EntityRelationAliasing** - Entity structs with aliased relationship traversal
 
 ## Models
 
@@ -254,6 +254,125 @@ type Comment struct {
 }
 
 type CommentIDPrimary struct {
+    ID uint
+}
+```
+
+### Relationship Aliasing
+
+Aliasing allows models to have multiple relationships to the same target type with different names:
+
+#### ForOne with Aliasing
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkContact:
+    type: ForOne
+    aliased: Contact
+  PersonalContact:
+    type: ForOne
+    aliased: Contact
+```
+
+Go representation:
+
+```go
+package models
+
+type Person struct {
+    ID                 uint
+    Name               string
+    WorkContactID      *uint      // Field names use relationship name
+    WorkContact        *Contact   // Type references the aliased target
+    PersonalContactID  *uint
+    PersonalContact    *Contact
+}
+
+type PersonIDPrimary struct {
+    ID uint
+}
+```
+
+#### ForMany with Aliasing
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkProjects:
+    type: ForMany
+    aliased: Project
+  PersonalProjects:
+    type: ForMany
+    aliased: Project
+```
+
+Go representation:
+
+```go
+package models
+
+type Person struct {
+    ID                   uint
+    Name                 string
+    WorkProjectIDs       []uint      // Field names use relationship name
+    WorkProjects         []Project   // Type references the aliased target
+    PersonalProjectIDs   []uint
+    PersonalProjects     []Project
+}
+
+type PersonIDPrimary struct {
+    ID uint
+}
+```
+
+#### Polymorphic Inverse Aliasing
+
+The polymorphic inverse aliasing pattern for semantic field names:
+
+```yaml
+name: Post
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Note:  # Semantic field name
+    type: HasOnePoly
+    through: Commentable
+    aliased: Comment  # Actual model type
+```
+
+Go representation:
+
+```go
+package models
+
+type Post struct {
+    ID     uint
+    Title  string
+    NoteID *uint      // Field uses the semantic name "Note"
+    Note   *Comment   // Type is the aliased model
+}
+
+type PostIDPrimary struct {
     ID uint
 }
 ```

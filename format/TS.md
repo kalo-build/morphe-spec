@@ -17,8 +17,8 @@ The `KA:MO1:TS1` format supports the following Morphe specification features:
 ✅ **EnumFields** - Enum types used as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
-🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
-🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+✅ **ModelRelationAliasing** - Custom relationship naming with proper type imports  
+✅ **EntityRelationAliasing** - Entity types with aliased relationship traversal
 
 ## Models
 
@@ -286,6 +286,125 @@ export type Comment = {
 }
 
 export type CommentIDPrimary = {
+  id: number
+}
+```
+
+### Relationship Aliasing
+
+Aliasing allows models to have multiple relationships to the same target type with different names:
+
+#### ForOne with Aliasing
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkContact:
+    type: ForOne
+    aliased: Contact
+  PersonalContact:
+    type: ForOne
+    aliased: Contact
+```
+
+TypeScript representation:
+
+```ts
+import { Contact } from "./contact"
+
+export type Person = {
+  id: number
+  name: string
+  workContactID?: number         // Field names use relationship name
+  workContact?: Contact          // Type references the aliased target
+  personalContactID?: number
+  personalContact?: Contact
+}
+
+export type PersonIDPrimary = {
+  id: number
+}
+```
+
+#### ForMany with Aliasing
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkProjects:
+    type: ForMany
+    aliased: Project
+  PersonalProjects:
+    type: ForMany
+    aliased: Project
+```
+
+TypeScript representation:
+
+```ts
+import { Project } from "./project"
+
+export type Person = {
+  id: number
+  name: string
+  workProjectIDs?: number[]       // Field names use relationship name
+  workProjects?: Project[]        // Type references the aliased target
+  personalProjectIDs?: number[]
+  personalProjects?: Project[]
+}
+
+export type PersonIDPrimary = {
+  id: number
+}
+```
+
+#### Polymorphic Inverse Aliasing
+
+The polymorphic inverse aliasing pattern for semantic field names:
+
+```yaml
+name: Post
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Note:  # Semantic field name
+    type: HasOnePoly
+    through: Commentable
+    aliased: Comment  # Actual model type
+```
+
+TypeScript representation:
+
+```ts
+import { Comment } from "./comment"
+
+export type Post = {
+  id: number
+  title: string
+  noteID?: number      // Field uses the semantic name "Note"
+  note?: Comment       // Type is the aliased model
+}
+
+export type PostIDPrimary = {
   id: number
 }
 ```

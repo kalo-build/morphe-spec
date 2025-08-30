@@ -15,8 +15,8 @@ The `KA:MO1:YAML1` format supports all core Morphe specification features:
 ✅ **EnumFields** - Using enums as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
-🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
-🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+✅ **ModelRelationAliasing** - Custom relationship naming and aliasing  
+✅ **EntityRelationAliasing** - Custom relationship naming and aliasing
 
 ## File Extensions
 
@@ -171,6 +171,54 @@ related:
     for:
       - Person
       - Company
+```
+
+### Relationship Aliasing
+
+Use the `aliased` property to create multiple relationships to the same target model:
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkContact:
+    type: ForOne
+    aliased: Contact  # Points to Contact model
+  PersonalContact:
+    type: ForOne
+    aliased: Contact  # Different relationship, same target
+  WorkProjects:
+    type: ForMany
+    aliased: Project
+  PersonalProjects:
+    type: ForMany
+    aliased: Project
+```
+
+#### Polymorphic Inverse Aliasing
+
+Combine polymorphic relationships with aliasing for semantic field names:
+
+```yaml
+name: Post
+fields:
+  ID:
+    type: AutoIncrement
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Note:  # Semantic name for the relationship
+    type: HasOnePoly
+    through: Commentable
+    aliased: Comment  # Actual model type
 ```
 
 ## Enumerations
@@ -348,6 +396,35 @@ related:
     for:
       - Person
       - Company
+```
+
+### Entity Relationship Aliasing
+
+Entities support aliasing with the same syntax as models:
+
+```yaml
+name: PersonProfile
+fields:
+  ID:
+    type: Person.ID
+    attributes:
+      - immutable
+      - mandatory
+  Name:
+    type: Person.Name
+  WorkEmail:
+    type: Person.WorkContact.Email  # Path through aliased relationship
+  PersonalPhone:
+    type: Person.PersonalContact.Phone
+identifiers:
+  primary: ID
+related:
+  PrimaryCompany:
+    type: ForOne
+    aliased: Company
+  SecondaryCompany:
+    type: ForOne
+    aliased: Company
 ```
 
 ## Field Types

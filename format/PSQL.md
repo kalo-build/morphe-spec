@@ -23,8 +23,8 @@ The `KA:MO1:PSQL1` format supports the following Morphe specification features:
 ✅ **EnumFields** - Foreign key references to enum lookup tables  
 ✅ **ModelRelationPolymorphism** - Junction tables with polymorphic keys  
 ✅ **EntityRelationPolymorphism** - Views with polymorphic joins  
-🚧 **ModelRelationAliasing** - Custom relationship naming (future)  
-🚧 **EntityRelationAliasing** - Custom relationship naming (future)
+✅ **ModelRelationAliasing** - Custom relationship naming with backward-compatible SQL  
+✅ **EntityRelationAliasing** - Views with aliased relationship traversal
 
 ## Models
 
@@ -376,6 +376,146 @@ CREATE TABLE comments (
 );
 
 CREATE INDEX idx_comments_commentable ON comments(commentable_type, commentable_id);
+```
+
+### Relationship Aliasing
+
+Aliasing allows multiple relationships to the same target model. In PostgreSQL, column and table names use the relationship name (not the aliased target) to maintain backward compatibility and clear semantics.
+
+#### ForOne with Aliasing
+
+A model with multiple ForOne relationships to the same target:
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkContact:
+    type: ForOne
+    aliased: Contact
+  PersonalContact:
+    type: ForOne
+    aliased: Contact
+```
+
+PostgreSQL representation:
+
+```sql
+CREATE TABLE people (
+    id SERIAL PRIMARY KEY,
+    "name" TEXT,
+    work_contact_id INTEGER,      -- Uses relationship name, not "contact_id"
+    personal_contact_id INTEGER,   -- Distinct column for each relationship
+    CONSTRAINT fk_people_work_contact_id FOREIGN KEY (work_contact_id)
+      REFERENCES contacts(id)
+      ON DELETE CASCADE,
+    CONSTRAINT fk_people_personal_contact_id FOREIGN KEY (personal_contact_id)
+      REFERENCES contacts(id)
+      ON DELETE CASCADE
+);
+
+CREATE INDEX idx_people_work_contact_id ON people(work_contact_id);
+CREATE INDEX idx_people_personal_contact_id ON people(personal_contact_id);
+```
+
+#### ForMany with Aliasing
+
+A model with multiple ForMany relationships to the same target:
+
+```yaml
+name: Person
+fields:
+  ID:
+    type: AutoIncrement
+  Name:
+    type: String
+identifiers:
+  primary: ID
+related:
+  WorkProjects:
+    type: ForMany
+    aliased: Project
+  PersonalProjects:
+    type: ForMany
+    aliased: Project
+```
+
+PostgreSQL representation:
+
+```sql
+CREATE TABLE people (
+    id SERIAL PRIMARY KEY,
+    "name" TEXT
+);
+
+-- Junction table uses relationship name, not aliased target
+CREATE TABLE people_work_projects (
+    id SERIAL PRIMARY KEY,
+    person_id INTEGER NOT NULL,
+    work_project_id INTEGER NOT NULL,
+    CONSTRAINT fk_people_work_projects_person_id FOREIGN KEY (person_id)
+      REFERENCES people(id)
+      ON DELETE CASCADE,
+    CONSTRAINT fk_people_work_projects_work_project_id FOREIGN KEY (work_project_id)
+      REFERENCES projects(id)
+      ON DELETE CASCADE,
+    CONSTRAINT uk_people_work_projects UNIQUE (person_id, work_project_id)
+);
+
+CREATE TABLE people_personal_projects (
+    id SERIAL PRIMARY KEY,
+    person_id INTEGER NOT NULL,
+    personal_project_id INTEGER NOT NULL,
+    CONSTRAINT fk_people_personal_projects_person_id FOREIGN KEY (person_id)
+      REFERENCES people(id)
+      ON DELETE CASCADE,
+    CONSTRAINT fk_people_personal_projects_personal_project_id FOREIGN KEY (personal_project_id)
+      REFERENCES projects(id)
+      ON DELETE CASCADE,
+    CONSTRAINT uk_people_personal_projects UNIQUE (person_id, personal_project_id)
+);
+```
+
+#### Polymorphic Aliasing
+
+Polymorphic relationships can also use aliasing:
+
+```yaml
+name: Comment
+fields:
+  ID:
+    type: AutoIncrement
+  Text:
+    type: String
+identifiers:
+  primary: ID
+related:
+  CommentableResource:
+    type: ForOnePoly
+    for:
+      - Document
+      - Video
+      - Image
+    aliased: Resource  # Semantic alias that doesn't map to any model
+```
+
+PostgreSQL representation:
+
+```sql
+CREATE TABLE comments (
+    id SERIAL PRIMARY KEY,
+    text TEXT,
+    commentable_resource_type TEXT NOT NULL,  -- Uses relationship name
+    commentable_resource_id TEXT NOT NULL      -- Not "resource_type/id"
+);
+
+CREATE INDEX idx_comments_commentable_resource ON comments(commentable_resource_type, commentable_resource_id);
 ```
 
 ## Enumerations
