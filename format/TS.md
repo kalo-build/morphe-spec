@@ -345,10 +345,10 @@ fields:
 identifiers:
   primary: ID
 related:
-  WorkProjects:
+  WorkProject:
     type: ForMany
     aliased: Project
-  PersonalProjects:
+  PersonalProject:
     type: ForMany
     aliased: Project
 ```

@@ -193,10 +193,10 @@ related:
   PersonalContact:
     type: ForOne
     aliased: Contact  # Different relationship, same target
-  WorkProjects:
+  WorkProject:
     type: ForMany
     aliased: Project
-  PersonalProjects:
+  PersonalProject:
     type: ForMany
     aliased: Project
 ```

@@ -371,6 +371,7 @@ These relationships indicate that the current model "has" related models through
 - `HasOnePoly`: One-to-one polymorphic relationship
 - `HasManyPoly`: One-to-many polymorphic relationship  
 - `through`: Specifies the polymorphic interface name
+- `aliased`: (Optional) Specifies the actual target model name when different from the relationship name
 
 *Example:* `person.mod` with polymorphic relationships
 
@@ -478,19 +479,19 @@ related:
   PersonalContact:
     type: ForOne
     aliased: Contact  # Same target model with different relationship name
-  WorkProjects:
+  WorkProject:
     type: ForMany
     aliased: Project
-  PersonalProjects:
+  PersonalProject:
     type: ForMany
     aliased: Project
 ```
 
-#### Polymorphic Inverse Aliasing
+#### Polymorphic Relationship Aliasing
 
-A special pattern for polymorphic relationships allows semantic field naming in generated types:
+Like regular relationships, polymorphic relationships support the `aliased` property to decouple the relationship name from the target model name. When `aliased` is not specified, the relationship name itself is used as the target model name.
 
-*Example:* `post.mod` with polymorphic inverse aliasing
+*Example:* `post.mod` with polymorphic aliasing for semantic field naming
 
 ```yaml
 name: Post
@@ -502,10 +503,13 @@ fields:
 identifiers:
   primary: ID
 related:
-  Note:  # Semantic field name
+  Note:  # Semantic field name (used in generated code)
     type: HasOnePoly
     through: Commentable
-    aliased: Comment  # Actual model type
+    aliased: Comment  # Actual model type (Comment model must exist)
+  Comment:  # Without aliased, this references a Comment model directly
+    type: HasManyPoly
+    through: Commentable
 ```
 
 This pattern is particularly useful for creating meaningful field names in generated code while maintaining the polymorphic relationship structure.
@@ -577,7 +581,7 @@ Each relationship is characterized by an `ownership` and a `cardinality` that di
 
 ### Polymorphic Relationships
 
-Entities support the same polymorphic relationship types as models, allowing them to represent complex business relationships across multiple entity types.
+Entities support the same polymorphic relationship types as models, allowing them to represent complex business relationships across multiple entity types. Like models, the `aliased` property is optional - when not specified, the relationship name is used as the target entity name.
 
 #### HasOnePoly and HasManyPoly (with `through`)
 
