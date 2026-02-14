@@ -256,7 +256,13 @@ fields:
     type: String
   City:
     type: String
+  Unit:
+    type: String
+    attributes:
+      - optional
 ```
+
+Structure fields support the same [first-class attributes](#first-class-attributes) as model fields. In particular, the `optional` attribute can be used to mark individual fields as not required.
 
 ## Enums
 
@@ -306,14 +312,16 @@ name: Person
 fields:
   ID:
     type: AutoIncrement
-    attributes:
-      - mandatory
   FirstName:
     type: String
   LastName:
     type: String
   Nationality:
     type: Nationality
+  OrganizationID:
+    type: UUID
+    attributes:
+      - optional
 identifiers:
   primary: ID
   name:
@@ -332,7 +340,18 @@ Denoted by the `fields:` key, the model fields are specified as a uniquely named
 
 Each field has exactly one type.
 
-Each field may have a list of unconstrained, lower, snake-case attributes. Attributes have no inherent meaning to the Morphe specification but may be required by specific transpiling implementations.
+Each field may have a list of lower, snake-case attributes. Attributes are used to convey additional field-level semantics to transpiling plugins.
+
+#### First-Class Attributes
+
+The following attributes are recognized as first-class by many Morphe plugins:
+
+| Attribute  | Applies to | Description |
+|------------|------------|-------------|
+| `optional` | Models, Structures, Entities | Marks a field as optional. All fields are **required by default**. When `optional` is present, the generated output uses the language-appropriate nullable/optional representation (e.g., `*T` in Go, `T?` in TypeScript, `.optional()` in Zod). |
+| `immutable` | Entities | Marks a field as immutable (read-only after creation). Preserved as metadata in generated struct tags. |
+
+Additional, unconstrained attributes may also be specified and will be passed through to transpiling implementations.
 
 ### Identifiers
 
@@ -380,8 +399,6 @@ name: Person
 fields:
   ID:
     type: AutoIncrement
-    attributes:
-      - mandatory
   FirstName:
     type: String
   LastName:
@@ -412,8 +429,6 @@ name: Comment
 fields:
   ID:
     type: AutoIncrement
-    attributes:
-      - mandatory
   Content:
     type: String
   CreatedAt:
@@ -435,8 +450,6 @@ name: Tag
 fields:
   ID:
     type: AutoIncrement
-    attributes:
-      - mandatory
   Name:
     type: String
   Color:
@@ -466,8 +479,6 @@ name: Person
 fields:
   ID:
     type: AutoIncrement
-    attributes:
-      - mandatory
   Name:
     type: String
 identifiers:
@@ -529,7 +540,6 @@ fields:
     type: Person.ID
     attributes:
       - immutable
-      - mandatory
   LastName:
     type: Person.LastName
   Nationality:
@@ -547,7 +557,7 @@ related:
 
 Denoted by the `fields:` key, the entity fields are specified as a uniquely named key (example: `Street:`) and the finer-grained field configuration.
 
-Each field may have a list of unconstrained, lower, snake-case (*Example:* `- immutable`, `- mandatory`) attributes. Attributes may be required by specific transpiling implementations, but have no inherent meaning to the Morphe specification itself.
+Each field may have a list of lower, snake-case attributes. The same [first-class attributes](#first-class-attributes) defined for model fields apply to entity fields. The `immutable` attribute is particularly common on entity ID fields to indicate they should not be modified after creation.
 
 ### Entity Identifiers
 
@@ -594,7 +604,6 @@ fields:
     type: Person.ID
     attributes:
       - immutable
-      - mandatory
   LastName:
     type: Person.LastName
   Nationality:
@@ -621,7 +630,6 @@ fields:
     type: Comment.ID
     attributes:
       - immutable
-      - mandatory
   Content:
     type: Comment.Content
   CreatedAt:
@@ -645,7 +653,6 @@ fields:
     type: Tag.ID
     attributes:
       - immutable
-      - mandatory
   Name:
     type: Tag.Name
   Color:
@@ -673,7 +680,6 @@ fields:
     type: Person.ID
     attributes:
       - immutable
-      - mandatory
   Name:
     type: Person.Name
   WorkEmail:
