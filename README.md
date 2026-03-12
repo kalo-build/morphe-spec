@@ -569,9 +569,21 @@ Currently, entity identification supports globally unique IDs from a single refe
 
 Entity field types are indirected model field paths. The path begins with a root model (*Example:* `type: User.Address.Street` -> `User` as the "root model"), and includes related models, terminating in a field of the last related model name. The field inherits the type from the terminal model.
 
+### Entity Layer vs. Model Layer
+
+Entities operate across two distinct layers:
+
+1. **Field resolution (model layer):** Entity field types are indirected paths that traverse **model-level** relations. For example, `Task.Assignee.User.FirstName` walks the `Task` model's `Assignee` relation (which aliases `Membership`), then the `Membership` model's `User` relation, and finally resolves the `FirstName` field from the `User` model. No entity-level relation declaration is required for field path traversal — the model layer handles resolution independently.
+
+2. **Entity relations (entity layer):** The `related:` section declares relationships **between entities**. These are a separate concern from field paths and represent the entity-level graph used for code generation (e.g., repository interfaces, API routes, navigation).
+
+A given entity may traverse model relations in its field paths that it does not declare in its own `related:` section, and vice versa. The two are independent.
+
 ### Related
 
-Denoted by the `related:` key, this section lists all related entities. This means both dependencies and dependents (prerequisites). 
+Denoted by the `related:` key, this section lists all related entities. This means both dependencies and dependents (prerequisites).
+
+Relations must be **explicitly bi-directional**: if entity A declares a relation to entity B, entity B must declare the corresponding inverse relation to entity A. For example, if `Invoice` declares `Customer: ForOne`, then `Customer` must declare `Invoice: HasMany`.
 
 Each relationship is characterized by an `ownership` and a `cardinality` that differentiates between `1` and `n` related entities.
 
