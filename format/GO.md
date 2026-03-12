@@ -17,6 +17,8 @@ The `KA:MO1:GO1` format supports the following Morphe specification features:
 ✅ **EnumFields** - Enum types used as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
+✅ **ModelRelationAttributes** - Relation attributes reflected in Go struct field types  
+✅ **EntityRelationAttributes** - Relation attributes reflected in entity struct field types  
 ✅ **ModelRelationAliasing** - Custom relationship naming with proper type imports  
 ✅ **EntityRelationAliasing** - Entity structs with aliased relationship traversal
 

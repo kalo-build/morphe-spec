@@ -23,6 +23,8 @@ The `KA:MO1:PSQL1` format supports the following Morphe specification features:
 ✅ **EnumFields** - Foreign key references to enum lookup tables  
 ✅ **ModelRelationPolymorphism** - Junction tables with polymorphic keys  
 ✅ **EntityRelationPolymorphism** - Views with polymorphic joins  
+✅ **ModelRelationAttributes** - Optional foreign keys with nullable columns  
+✅ **EntityRelationAttributes** - Entity relation attributes preserved in views  
 ✅ **ModelRelationAliasing** - Custom relationship naming with backward-compatible SQL  
 ✅ **EntityRelationAliasing** - Views with aliased relationship traversal
 
@@ -188,7 +190,7 @@ PostgreSQL representation:
 CREATE TABLE contact_infos (
     id SERIAL PRIMARY KEY,
     email TEXT,
-    person_id INTEGER,
+    person_id INTEGER NOT NULL,
     CONSTRAINT fk_contact_infos_person_id FOREIGN KEY (person_id)
       REFERENCES people(id)
       ON DELETE CASCADE
@@ -196,6 +198,93 @@ CREATE TABLE contact_infos (
 
 CREATE INDEX idx_contact_infos_person_id ON contact_infos(person_id);
 ```
+
+### Optional ForOne Relationship
+
+When a `ForOne` relation has the `optional` attribute, the foreign key column is nullable and uses `SET NULL` on delete instead of `CASCADE`:
+
+```yaml
+name: Task
+fields:
+  ID:
+    type: UUID
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Project:
+    type: ForOne
+    attributes:
+      - optional
+  Author:
+    type: ForOne
+```
+
+PostgreSQL representation:
+
+```sql
+CREATE TABLE tasks (
+    id UUID PRIMARY KEY,
+    title TEXT,
+    project_id UUID,                              -- nullable (optional)
+    author_id UUID NOT NULL,                       -- required (default)
+    CONSTRAINT fk_tasks_project_id FOREIGN KEY (project_id)
+      REFERENCES projects(id)
+      ON DELETE SET NULL,                           -- SET NULL for optional
+    CONSTRAINT fk_tasks_author_id FOREIGN KEY (author_id)
+      REFERENCES authors(id)
+      ON DELETE CASCADE                            -- CASCADE for required
+);
+
+CREATE INDEX idx_tasks_project_id ON tasks(project_id);
+CREATE INDEX idx_tasks_author_id ON tasks(author_id);
+```
+
+### Composite Identifiers with Relation References
+
+Non-primary identifiers that reference relations via the `rel:` prefix are resolved to the corresponding foreign key columns. The transpiler generates a `UNIQUE` index for each non-primary composite identifier:
+
+```yaml
+name: TaskTag
+fields:
+  ID:
+    type: UUID
+identifiers:
+  primary: ID
+  taskTag:
+    - rel:Task
+    - rel:Tag
+related:
+  Task:
+    type: ForOne
+  Tag:
+    type: ForOne
+```
+
+PostgreSQL representation:
+
+```sql
+CREATE TABLE task_tags (
+    id UUID PRIMARY KEY,
+    task_id UUID NOT NULL,
+    tag_id UUID NOT NULL,
+    CONSTRAINT fk_task_tags_task_id FOREIGN KEY (task_id)
+      REFERENCES tasks(id)
+      ON DELETE CASCADE,
+    CONSTRAINT fk_task_tags_tag_id FOREIGN KEY (tag_id)
+      REFERENCES tags(id)
+      ON DELETE CASCADE
+);
+
+-- Composite unique index from the taskTag identifier
+CREATE UNIQUE INDEX idx_task_tags_task_id_tag_id ON task_tags(task_id, tag_id);
+
+CREATE INDEX idx_task_tags_task_id ON task_tags(task_id);
+CREATE INDEX idx_task_tags_tag_id ON task_tags(tag_id);
+```
+
+For `rel:` references to `ForOnePoly` relations, both the `_type` and `_id` columns are included in the unique constraint.
 
 ### ForMany Relationship
 

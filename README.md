@@ -19,6 +19,7 @@
     - [Related](#related)
       - [Supported Ownership Values](#supported-ownership-values)
       - [Supported Cardinality Values](#supported-cardinality-values)
+      - [Relation Attributes](#relation-attributes)
   - [Entities](#entities)
     - [Entity Fields](#entity-fields)
       - [Indirected Types](#indirected-types)
@@ -26,6 +27,7 @@
     - [Related](#related-1)
       - [Supported Ownership Values](#supported-ownership-values-1)
       - [Supported Cardinality Values](#supported-cardinality-values-1)
+      - [Relation Attributes](#relation-attributes-1)
   - [Contributing](#contributing)
   - [License](#license)
 
@@ -152,6 +154,8 @@ The Morphe specification defines a comprehensive set of features that compile pl
 | **EnumFields** | Using enums as field types in models, entities, and structures | ✅ Complete |
 | **ModelRelationPolymorphism** | Polymorphic relationships (HasOnePoly, HasManyPoly, ForOnePoly, ForManyPoly) in models | ✅ Complete |
 | **EntityRelationPolymorphism** | Polymorphic relationships in entities | ✅ Complete |
+| **ModelRelationAttributes** | Attributes on model relationships (e.g., `optional`) | ✅ Complete |
+| **EntityRelationAttributes** | Attributes on entity relationships (e.g., `optional`) | ✅ Complete |
 | **ModelRelationAliasing** | Custom relationship naming and aliasing in models | ✅ Complete |
 | **EntityRelationAliasing** | Custom relationship naming and aliasing in entities | ✅ Complete |
 
@@ -168,6 +172,8 @@ supported_features:
   - ModelRelationPolymorphism
   - EntityRelationPolymorphism
 unsupported_features:
+  - ModelRelationAttributes
+  - EntityRelationAttributes
   - ModelRelationAliasing
   - EntityRelationAliasing
   - EnumFields
@@ -357,7 +363,28 @@ Additional, unconstrained attributes may also be specified and will be passed th
 
 Denoted by the `identifiers:` key, this section always requires a `primary:` identifier with a corresponding field name.
 
-Composite or secondary identifier groups can be added with a unique key (i.e. `addr:`), and a list of relevant fields.
+Composite or secondary identifier groups can be added with a unique key (i.e. `addr:`), and a list of relevant fields. Identifier fields prefixed with `rel:` reference a relation declared in the `related:` section. Transpiling plugins resolve `rel:` references to the appropriate storage-level key(s) (e.g., a `ForOne` relation becomes the foreign key column). Only `ForOne` and `ForOnePoly` relations may be referenced in identifiers, as they represent local foreign keys.
+
+*Example:* Composite identifier referencing relations
+
+```yaml
+name: TaskTag
+fields:
+  ID:
+    type: UUID
+identifiers:
+  primary: ID
+  taskTag:
+    - rel:Task
+    - rel:Tag
+related:
+  Task:
+    type: ForOne
+  Tag:
+    type: ForOne
+```
+
+In this example, the `taskTag` identifier ensures uniqueness across the `Task` and `Tag` relations. The `rel:` prefix explicitly marks these as relation references rather than field names. Plugins resolve each `rel:` reference to the appropriate storage-level key(s) in generated output.
 
 ### Related
 
@@ -378,6 +405,38 @@ Each relationship is characterized by an ownership and a cardinality that differ
   * *Example:* "Address ForOne User": Address is related to one user.
 * `Many`: Relationships have a cardinality of many, when the current model's relationship supports a variable number of related model instances.
   * *Example:* "Owner HasMany Address": Owner is related to many addresses.
+
+#### Relation Attributes
+
+Both model and entity relations may have a list of `attributes` that convey additional semantics to transpiling plugins. This mirrors the `attributes` mechanism on fields but applies to the relationship itself.
+
+| Attribute  | Applies to | Description |
+|------------|------------|-------------|
+| `optional` | Model and entity relations | Marks the relationship as optional. All relations are **required by default**. When `optional` is present, transpiling plugins use the appropriate representation (e.g., nullable foreign keys in SQL, pointer types in Go, optional properties in TypeScript). |
+
+Additional, unconstrained attributes may also be specified and will be passed through to transpiling implementations.
+
+*Example:* Optional model relationship
+
+```yaml
+name: Task
+fields:
+  ID:
+    type: UUID
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Project:
+    type: ForOne
+    attributes:
+      - optional
+  Author:
+    type: ForOne
+```
+
+In this example, `Project` is an optional dependency (a task may exist without a project), while `Author` is required.
 
 ### Polymorphic Relationships
 
@@ -600,6 +659,32 @@ Each relationship is characterized by an `ownership` and a `cardinality` that di
   * *Example:* "Address ForOne User": Address is related to one user.
 * `Many`: The relationship supports multiple related entity instances.
   * *Example:* "Owner HasMany Address": Owner is related to many addresses.
+
+#### Relation Attributes
+
+Entity relations support the same `attributes` mechanism as model relations. See [Relation Attributes](#relation-attributes) for the full list of first-class attributes.
+
+*Example:* Optional entity relationship
+
+```yaml
+name: Task
+fields:
+  ID:
+    type: Task.ID
+    attributes:
+      - immutable
+  Title:
+    type: Task.Title
+identifiers:
+  primary: ID
+related:
+  Project:
+    type: ForOne
+    attributes:
+      - optional
+  Author:
+    type: ForOne
+```
 
 ### Polymorphic Relationships
 

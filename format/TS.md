@@ -17,6 +17,8 @@ The `KA:MO1:TS1` format supports the following Morphe specification features:
 ✅ **EnumFields** - Enum types used as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
+✅ **ModelRelationAttributes** - Relation attributes reflected in TypeScript types  
+✅ **EntityRelationAttributes** - Relation attributes reflected in entity types  
 ✅ **ModelRelationAliasing** - Custom relationship naming with proper type imports  
 ✅ **EntityRelationAliasing** - Entity types with aliased relationship traversal
 

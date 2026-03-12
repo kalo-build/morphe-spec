@@ -15,6 +15,8 @@ The `KA:MO1:YAML1` format supports all core Morphe specification features:
 ✅ **EnumFields** - Using enums as field types  
 ✅ **ModelRelationPolymorphism** - Polymorphic relationships in models  
 ✅ **EntityRelationPolymorphism** - Polymorphic relationships in entities  
+✅ **ModelRelationAttributes** - Attributes on model relationships (e.g., `optional`)  
+✅ **EntityRelationAttributes** - Attributes on entity relationships (e.g., `optional`)  
 ✅ **ModelRelationAliasing** - Custom relationship naming and aliasing  
 ✅ **EntityRelationAliasing** - Custom relationship naming and aliasing
 
@@ -219,6 +221,71 @@ related:
     type: HasOnePoly
     through: Commentable
     aliased: Comment  # Actual model type
+```
+
+### Relation Attributes
+
+Both model and entity relations support `attributes` for additional semantics. The `optional` attribute marks a relation as optional:
+
+```yaml
+name: Task
+fields:
+  ID:
+    type: UUID
+  Title:
+    type: String
+identifiers:
+  primary: ID
+related:
+  Project:
+    type: ForOne
+    attributes:
+      - optional
+  Author:
+    type: ForOne
+```
+
+Entity relations use the same syntax:
+
+```yaml
+name: Task
+fields:
+  ID:
+    type: Task.ID
+    attributes:
+      - immutable
+  Title:
+    type: Task.Title
+identifiers:
+  primary: ID
+related:
+  Project:
+    type: ForOne
+    attributes:
+      - optional
+  Author:
+    type: ForOne
+```
+
+### Composite Identifiers with Relation References
+
+Identifier fields prefixed with `rel:` reference relations declared in `related:`. This is useful for join tables or models where uniqueness spans multiple foreign keys:
+
+```yaml
+name: TaskTag
+fields:
+  ID:
+    type: UUID
+identifiers:
+  primary: ID
+  taskTag:
+    - rel:Task
+    - rel:Tag
+related:
+  Task:
+    type: ForOne
+  Tag:
+    type: ForOne
 ```
 
 ## Enumerations
