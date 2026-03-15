@@ -476,6 +476,47 @@ type Address struct {
 }
 ```
 
+Structure with composition (field referencing another structure):
+
+```yaml
+name: InvoiceLineItem
+fields:
+  Description:
+    type: String
+  Quantity:
+    type: Integer
+  UnitAmount:
+    type: Integer
+```
+
+```yaml
+name: Invoice
+fields:
+  ID:
+    type: String
+  LineItem:
+    type: InvoiceLineItem
+    attributes:
+      - optional
+```
+
+Go representation:
+
+```go
+package structures
+
+type InvoiceLineItem struct {
+    Description string
+    Quantity    int
+    UnitAmount  int
+}
+
+type Invoice struct {
+    ID       string
+    LineItem *InvoiceLineItem
+}
+```
+
 ## Entities
 
 Entities are high-level business objects that can combine and transform fields from multiple models.

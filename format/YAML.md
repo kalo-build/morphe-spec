@@ -333,6 +333,8 @@ identifiers:
 
 ## Structures
 
+Basic structure with primitive fields:
+
 ```yaml
 name: Address
 fields:
@@ -344,6 +346,30 @@ fields:
     type: String
   Country:
     type: String
+```
+
+Structure with composition (embedding another structure):
+
+```yaml
+name: InvoiceLineItem
+fields:
+  Description:
+    type: String
+  Quantity:
+    type: Integer
+  UnitAmount:
+    type: Integer
+```
+
+```yaml
+name: Invoice
+fields:
+  ID:
+    type: String
+  LineItem:
+    type: InvoiceLineItem
+    attributes:
+      - optional
 ```
 
 ## Entities

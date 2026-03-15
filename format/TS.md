@@ -501,7 +501,41 @@ export type Address = {
   country: string
 }
 ```
-[Previous content remains unchanged until after the Structures section]
+
+Structure with composition (field referencing another structure):
+
+```yaml
+name: InvoiceLineItem
+fields:
+  Description:
+    type: String
+  Quantity:
+    type: Integer
+  UnitAmount:
+    type: Integer
+```
+
+```yaml
+name: Invoice
+fields:
+  ID:
+    type: String
+  LineItem:
+    type: InvoiceLineItem
+    attributes:
+      - optional
+```
+
+TypeScript representation:
+
+```ts
+import type { InvoiceLineItem } from "./invoice-line-item"
+
+export type Invoice = {
+  id: string
+  lineItem?: InvoiceLineItem
+}
+```
 
 ## Entities
 

@@ -152,6 +152,7 @@ The Morphe specification defines a comprehensive set of features that compile pl
 | Feature | Description | Spec Status |
 |---------|-------------|--------|
 | **EnumFields** | Using enums as field types in models, entities, and structures | ✅ Complete |
+| **StructureComposition** | Using structures or enums as field types within structures (nested DTOs) | ✅ Complete |
 | **ModelRelationPolymorphism** | Polymorphic relationships (HasOnePoly, HasManyPoly, ForOnePoly, ForManyPoly) in models | ✅ Complete |
 | **EntityRelationPolymorphism** | Polymorphic relationships in entities | ✅ Complete |
 | **ModelRelationAttributes** | Attributes on model relationships (e.g., `optional`) | ✅ Complete |
@@ -247,9 +248,9 @@ Structures represent standalone, reusable, non-persisted groupings of fields, fo
 
 Each structure consists of a `name`, and a set of `fields`.
 
-**Note:** Unlike models, structures do not have relationships or identifiers, as they are not persisted.
+**Note:** Unlike models, structures do not have relationships or identifiers, as they are not persisted. Structure fields may use [atomic types](#atomic-field-types), [enum types](#enumeration-field-types), or other structures (composition).
 
-*Example:* `address.str`
+*Example:* `address.str` (primitive fields only)
 
 ```yaml
 name: Address
@@ -267,6 +268,34 @@ fields:
     attributes:
       - optional
 ```
+
+*Example:* Structure with an enum field (`invoice.str`)
+
+```yaml
+name: Invoice
+fields:
+  ID:
+    type: String
+  Status:
+    type: InvoiceStatus   # References the InvoiceStatus enum
+  Amount:
+    type: Integer
+```
+
+*Example:* Structure composition — one structure embedding another (`invoice_with_line_item.str`)
+
+```yaml
+name: InvoiceWithLineItem
+fields:
+  ID:
+    type: String
+  LineItem:
+    type: InvoiceLineItem   # References another structure (nested DTO)
+    attributes:
+      - optional
+```
+
+Where `InvoiceLineItem` is a separate structure (e.g., in `invoice_line_item.str`). This is composition, not a relational reference: the embedded structure is part of the same DTO.
 
 Structure fields support the same [first-class attributes](#first-class-attributes) as model fields. In particular, the `optional` attribute can be used to mark individual fields as not required.
 
@@ -415,6 +444,57 @@ Both model and entity relations may have a list of `attributes` that convey addi
 | `optional` | Model and entity relations | Marks the relationship as optional. All relations are **required by default**. When `optional` is present, transpiling plugins use the appropriate representation (e.g., nullable foreign keys in SQL, pointer types in Go, optional properties in TypeScript). |
 
 Additional, unconstrained attributes may also be specified and will be passed through to transpiling implementations.
+
+#### Relation Field Generation Semantics
+
+Each `ForOne` / `ForOnePoly` relation produces two generated fields: a **foreign key (FK) field** and a **relation object field**. These have distinct semantics:
+
+| Concern | FK Field (e.g., `OrganizationID`) | Relation Object (e.g., `Organization`) |
+|---------|----------------------------------|----------------------------------------|
+| Represents | Data ownership constraint | Optionally loaded related data |
+| Required relation | Non-nullable (e.g., Go `string`, SQL `NOT NULL`) | Always optional/nullable (e.g., Go `*Organization`) |
+| Optional relation | Nullable (e.g., Go `*string`, SQL nullable) | Always optional/nullable (e.g., Go `*Customer`) |
+| Rationale | FK is always present in the row | Relation object is only populated after a JOIN/eager load |
+
+**FK fields** follow the `optional` attribute directly — required relations produce non-nullable FKs, optional relations produce nullable FKs. This maps cleanly to SQL `NOT NULL` vs nullable column semantics.
+
+**Relation object fields** are always nullable/optional regardless of whether the relation itself is required. The FK guarantees the relationship exists, but the full related record may or may not have been loaded. A nil/undefined relation object means "not fetched," not "no relationship."
+
+`HasMany` / `HasManyPoly` relations produce slice/array fields (e.g., Go `[]Task`, TS `Task[]`), where nil/empty represents "not loaded" or "none."
+
+*Example:* Expected generated output for a model with both required and optional relations
+
+```yaml
+name: Task
+related:
+  Project:
+    type: ForOne                    # required
+  Assignee:
+    type: ForOne
+    aliased: Membership
+    attributes:
+      - optional                    # optional
+```
+
+Go output:
+```go
+type Task struct {
+    ProjectID   string       // required FK — non-nullable
+    Project     *Project     // relation object — always pointer
+    AssigneeID  *string      // optional FK — nullable
+    Assignee    *Membership  // relation object — always pointer
+}
+```
+
+TypeScript output:
+```typescript
+type Task = {
+    projectID: string;        // required FK
+    project?: Project;        // relation object — always optional
+    assigneeID?: string;      // optional FK
+    assignee?: Membership;    // relation object — always optional
+}
+```
 
 *Example:* Optional model relationship
 
